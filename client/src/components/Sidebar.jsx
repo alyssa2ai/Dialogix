@@ -8,6 +8,7 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
   const navigate = useNavigate();
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
+  const [hoveredId, setHoveredId] = useState(null);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -23,55 +24,72 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
     setRenamingId(null);
   };
 
-  // Group sessions by date
   const today = new Date().toDateString();
-  const todaySessions = sessions.filter(s => new Date(s.updatedAt).toDateString() === today);
-  const olderSessions = sessions.filter(s => new Date(s.updatedAt).toDateString() !== today);
+  const todaySessions  = sessions.filter(s => new Date(s.updatedAt).toDateString() === today);
+  const olderSessions  = sessions.filter(s => new Date(s.updatedAt).toDateString() !== today);
 
   return (
-    <div className="w-64 h-full bg-gray-900 border-r border-gray-800 flex flex-col flex-shrink-0">
+    <div style={{
+      width: '260px', height: '100%', flexShrink: 0,
+      background: 'rgba(7,16,42,0.85)',
+      borderRight: '0.5px solid rgba(168,85,247,0.15)',
+      backdropFilter: 'blur(20px)',
+      display: 'flex', flexDirection: 'column',
+      position: 'relative', zIndex: 10
+    }}>
 
       {/* Logo */}
-      <div className="p-4 border-b border-gray-800">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
-            <span className="text-white font-bold text-xs">D</span>
+      <div style={{ padding: '20px', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '10px',
+            background: 'linear-gradient(135deg,#3b82f6,#a855f7)',
+            boxShadow: '0 0 16px rgba(168,85,247,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <span style={{ color: 'white', fontFamily: 'var(--font-orbitron)', fontWeight: 700, fontSize: '14px' }}>D</span>
           </div>
-          <span className="text-white font-semibold">Dialogix</span>
+          <div>
+            <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: '14px', fontWeight: 600, color: '#e6eef8', letterSpacing: '0.08em' }}>DIALOGIX</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>SYNAPSE CORE v1.0</div>
+          </div>
         </div>
       </div>
 
-      {/* New chat */}
-      <div className="p-3">
-        <button
-          onClick={onNewChat}
-          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 transition-all text-sm"
+      {/* New chat button */}
+      <div style={{ padding: '12px' }}>
+        <button onClick={onNewChat} style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
+          background: 'rgba(168,85,247,0.08)',
+          border: '0.5px solid rgba(168,85,247,0.25)',
+          color: 'var(--text-muted)', fontSize: '13px',
+          fontFamily: 'var(--font-inter)', transition: 'all 0.2s'
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(168,85,247,0.15)'; e.currentTarget.style.color = '#e6eef8'; e.currentTarget.style.boxShadow = '0 0 12px rgba(168,85,247,0.2)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.boxShadow = 'none'; }}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
           </svg>
-          New chat
+          New transmission
         </button>
       </div>
 
-      {/* Sessions list */}
-      <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
+      {/* Sessions */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 8px' }}>
 
         {todaySessions.length > 0 && (
           <>
-            <p className="text-xs text-gray-600 px-2 py-2 font-medium uppercase tracking-wider">Today</p>
+            <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: '9px', color: 'var(--text-dim)', padding: '10px 8px 6px', letterSpacing: '0.15em' }}>TODAY</div>
             {todaySessions.map(s => (
-              <SessionItem
-                key={s._id}
-                session={s}
-                isActive={s._id === activeChatId}
-                isRenaming={renamingId === s._id}
-                renameValue={renameValue}
-                setRenameValue={setRenameValue}
-                onSelect={() => onSelectChat(s._id)}
-                onRename={() => startRename(s)}
-                onRenameSubmit={() => submitRename(s._id)}
+              <SessionItem key={s._id} session={s} isActive={s._id === activeChatId}
+                isRenaming={renamingId === s._id} renameValue={renameValue}
+                setRenameValue={setRenameValue} onSelect={() => onSelectChat(s._id)}
+                onRename={() => startRename(s)} onRenameSubmit={() => submitRename(s._id)}
                 onDelete={() => onDeleteChat(s._id)}
+                isHovered={hoveredId === s._id}
+                onHover={setHoveredId}
               />
             ))}
           </>
@@ -79,47 +97,62 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
 
         {olderSessions.length > 0 && (
           <>
-            <p className="text-xs text-gray-600 px-2 py-2 font-medium uppercase tracking-wider">Previous</p>
+            <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: '9px', color: 'var(--text-dim)', padding: '10px 8px 6px', letterSpacing: '0.15em' }}>PREVIOUS</div>
             {olderSessions.map(s => (
-              <SessionItem
-                key={s._id}
-                session={s}
-                isActive={s._id === activeChatId}
-                isRenaming={renamingId === s._id}
-                renameValue={renameValue}
-                setRenameValue={setRenameValue}
-                onSelect={() => onSelectChat(s._id)}
-                onRename={() => startRename(s)}
-                onRenameSubmit={() => submitRename(s._id)}
+              <SessionItem key={s._id} session={s} isActive={s._id === activeChatId}
+                isRenaming={renamingId === s._id} renameValue={renameValue}
+                setRenameValue={setRenameValue} onSelect={() => onSelectChat(s._id)}
+                onRename={() => startRename(s)} onRenameSubmit={() => submitRename(s._id)}
                 onDelete={() => onDeleteChat(s._id)}
+                isHovered={hoveredId === s._id}
+                onHover={setHoveredId}
               />
             ))}
           </>
         )}
 
         {sessions.length === 0 && (
-          <p className="text-gray-600 text-xs text-center mt-8 px-4">No chats yet. Start a new one!</p>
+          <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-dim)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+            NO TRANSMISSIONS<br/>
+            <span style={{ fontSize: '10px', opacity: 0.5 }}>Start a new session</span>
+          </div>
         )}
       </div>
 
       {/* User footer */}
-      <div className="p-3 border-t border-gray-800">
-        <div className="flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-gray-800 transition-colors group">
-          <div className="w-7 h-7 rounded-full bg-indigo-900 flex items-center justify-center flex-shrink-0">
-            <span className="text-indigo-300 text-xs font-semibold">
-              {user?.username?.[0]?.toUpperCase()}
-            </span>
+      <div style={{ padding: '12px', borderTop: '0.5px solid rgba(255,255,255,0.05)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '10px 12px', borderRadius: '10px',
+          transition: 'all 0.2s', cursor: 'default'
+        }}
+          className="group"
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        >
+          <div style={{
+            width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
+            background: 'linear-gradient(135deg,#3b82f6,#a855f7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '12px', fontWeight: 600, color: 'white',
+            boxShadow: '0 0 10px rgba(168,85,247,0.4)'
+          }}>
+            {user?.username?.[0]?.toUpperCase()}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-gray-300 text-sm font-medium truncate">{user?.username}</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '13px', color: '#e6eef8', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.username}</div>
+            <div style={{ fontSize: '10px', color: '#22c55e', fontFamily: 'var(--font-mono)' }}>● ONLINE</div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all"
-            title="Logout"
+          <button onClick={handleLogout} title="Disconnect" style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text-dim)', padding: '4px', borderRadius: '6px',
+            transition: 'color 0.2s'
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-dim)'}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
             </svg>
           </button>
         </div>
@@ -128,47 +161,73 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
   );
 }
 
-// Extracted session item to keep things clean
-function SessionItem({ session, isActive, isRenaming, renameValue, setRenameValue, onSelect, onRename, onRenameSubmit, onDelete }) {
+function SessionItem({ session, isActive, isRenaming, renameValue, setRenameValue, onSelect, onRename, onRenameSubmit, onDelete, onHover }) {
   return (
     <div
-      className={`group flex items-center gap-1 px-2 py-2 rounded-xl cursor-pointer transition-colors
-        ${isActive ? 'bg-gray-800' : 'hover:bg-gray-800/60'}`}
       onClick={onSelect}
+      onMouseEnter={() => onHover(session._id)}
+      onMouseLeave={() => onHover(null)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '6px',
+        padding: '9px 10px', borderRadius: '10px', cursor: 'pointer',
+        marginBottom: '2px', transition: 'all 0.15s',
+        background: isActive ? 'rgba(168,85,247,0.12)' : 'transparent',
+        border: isActive ? '0.5px solid rgba(168,85,247,0.25)' : '0.5px solid transparent',
+        boxShadow: isActive ? '0 0 10px rgba(168,85,247,0.1)' : 'none',
+      }}
+      onMouseOver={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+      onMouseOut={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
     >
+      {/* Active indicator dot */}
+      <div style={{
+        width: '5px', height: '5px', borderRadius: '50%', flexShrink: 0,
+        background: isActive ? '#a855f7' : 'rgba(255,255,255,0.15)',
+        boxShadow: isActive ? '0 0 6px #a855f7' : 'none',
+        transition: 'all 0.2s'
+      }}/>
+
       {isRenaming ? (
-        <input
-          autoFocus
-          value={renameValue}
+        <input autoFocus value={renameValue}
           onChange={e => setRenameValue(e.target.value)}
           onBlur={onRenameSubmit}
           onKeyDown={e => e.key === 'Enter' && onRenameSubmit()}
           onClick={e => e.stopPropagation()}
-          className="flex-1 bg-gray-700 text-white text-sm rounded-lg px-2 py-0.5 outline-none border border-indigo-500"
+          style={{
+            flex: 1, background: 'rgba(168,85,247,0.1)',
+            border: '0.5px solid rgba(168,85,247,0.5)',
+            borderRadius: '6px', padding: '2px 8px',
+            color: '#e6eef8', fontSize: '13px',
+            fontFamily: 'var(--font-inter)', outline: 'none'
+          }}
         />
       ) : (
-        <span className="flex-1 text-sm text-gray-300 truncate">{session.title}</span>
+        <span style={{
+          flex: 1, fontSize: '13px', color: isActive ? '#e6eef8' : 'var(--text-muted)',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          fontFamily: 'var(--font-inter)'
+        }}>
+          {session.title}
+        </span>
       )}
 
-      {/* Action buttons — appear on hover */}
       {!isRenaming && (
-        <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-          <button
-            onClick={e => { e.stopPropagation(); onRename(); }}
-            className="text-gray-500 hover:text-gray-300 p-0.5"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); onDelete(); }}
-            className="text-gray-500 hover:text-red-400 p-0.5"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+        <div style={{ display: 'flex', gap: '2px', opacity: 0, transition: 'opacity 0.15s' }}
+          className="session-actions">
+          {[
+            { icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z', action: onRename, color: 'var(--text-dim)', hoverColor: '#e6eef8' },
+            { icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16', action: onDelete, color: 'var(--text-dim)', hoverColor: '#f87171' }
+          ].map((btn, i) => (
+            <button key={i}
+              onClick={e => { e.stopPropagation(); btn.action(); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: btn.color, padding: '2px', borderRadius: '4px', transition: 'color 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.color = btn.hoverColor}
+              onMouseLeave={e => e.currentTarget.style.color = btn.color}
+            >
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={btn.icon}/>
+              </svg>
+            </button>
+          ))}
         </div>
       )}
     </div>

@@ -1,0 +1,666 @@
+import { useRef, useState, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Float, RoundedBox, MeshDistortMaterial } from '@react-three/drei';
+import * as THREE from 'three';
+import { PERSONA_CONFIGS } from '../data/tarsQuotes';
+import { usePersona } from '../context/PersonaContext';
+import { useSound } from '../hooks/useSound';
+import { useTARSState } from '../hooks/useTARSState';
+
+function useMouse() {
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handler = (e) =>
+      setMouse({
+        x: (e.clientX / window.innerWidth) * 2 - 1,
+        y: (e.clientY / window.innerHeight) * 2 - 1,
+      });
+
+    window.addEventListener('mousemove', handler);
+    return () => window.removeEventListener('mousemove', handler);
+  }, []);
+
+  return mouse;
+}
+
+function GargantuaCore({ isThinking, isTransmitting, isCelebrating, personaColor, diskColor }) {
+  const disk1Ref = useRef();
+  const disk2Ref = useRef();
+  const disk3Ref = useRef();
+  const coreRef = useRef();
+  const glowRef = useRef();
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const speed = isCelebrating ? 5 : isThinking ? 3.5 : isTransmitting ? 2.5 : 1.0;
+
+    if (disk1Ref.current) disk1Ref.current.rotation.z += 0.008 * speed;
+    if (disk2Ref.current) disk2Ref.current.rotation.z -= 0.005 * speed;
+    if (disk3Ref.current) {
+      disk3Ref.current.rotation.z += 0.003 * speed;
+      disk3Ref.current.rotation.x = Math.sin(t * 0.3) * 0.4;
+    }
+
+    if (coreRef.current) {
+      coreRef.current.material.distort = isThinking
+        ? 0.6 + 0.2 * Math.sin(t * 4)
+        : 0.2 + 0.05 * Math.sin(t * 1.2);
+    }
+
+    if (glowRef.current) {
+      glowRef.current.material.opacity = isCelebrating
+        ? 0.4 + 0.2 * Math.sin(t * 6)
+        : isThinking
+        ? 0.25 + 0.15 * Math.sin(t * 3)
+        : 0.08 + 0.04 * Math.sin(t);
+    }
+  });
+
+  return (
+    <group>
+      <mesh ref={glowRef}>
+        <sphereGeometry args={[0.52, 32, 32]} />
+        <meshBasicMaterial color={personaColor} transparent opacity={0.08} side={THREE.BackSide} />
+      </mesh>
+
+      <mesh>
+        <sphereGeometry args={[0.28, 32, 32]} />
+        <meshBasicMaterial color="#000005" />
+      </mesh>
+
+      <mesh ref={coreRef}>
+        <sphereGeometry args={[0.26, 64, 64]} />
+        <MeshDistortMaterial
+          color="#0a0018"
+          emissive="#1e1040"
+          emissiveIntensity={0.5}
+          distort={0.2}
+          speed={1.5}
+          roughness={0}
+          metalness={1}
+        />
+      </mesh>
+
+      <mesh ref={disk1Ref} rotation={[Math.PI * 0.15, 0, 0]}>
+        <ringGeometry args={[0.32, 0.48, 64]} />
+        <meshBasicMaterial
+          color={diskColor}
+          transparent
+          opacity={isCelebrating ? 1 : 0.85}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      <mesh ref={disk2Ref} rotation={[Math.PI * 0.18, 0.3, 0]}>
+        <ringGeometry args={[0.48, 0.62, 64]} />
+        <meshBasicMaterial color={personaColor} transparent opacity={0.4} side={THREE.DoubleSide} />
+      </mesh>
+
+      <mesh ref={disk3Ref} rotation={[Math.PI * 0.5, 0.6, 0]}>
+        <ringGeometry args={[0.62, 0.72, 64]} />
+        <meshBasicMaterial color="#818cf8" transparent opacity={0.2} side={THREE.DoubleSide} />
+      </mesh>
+
+      <pointLight
+        color={personaColor}
+        intensity={isCelebrating ? 6 : isThinking ? 4 : 1.5}
+        distance={3}
+        decay={2}
+      />
+    </group>
+  );
+}
+
+function TARSPanel({ position, rotation, openAngle, slitColor, isBlinking }) {
+  const panelRef = useRef();
+  const slitRef = useRef();
+  const currentAngle = useRef(0);
+
+  useFrame(() => {
+    currentAngle.current += (openAngle - currentAngle.current) * 0.04;
+    if (panelRef.current) {
+      panelRef.current.rotation.y = currentAngle.current;
+      panelRef.current.position.x = position[0] + Math.sin(currentAngle.current) * 0.28;
+    }
+
+    if (slitRef.current) {
+      const targetY = isBlinking ? 0.1 : 1.0;
+      slitRef.current.scale.y += (targetY - slitRef.current.scale.y) * 0.2;
+    }
+  });
+
+  return (
+    <group ref={panelRef} position={position} rotation={rotation}>
+      <RoundedBox args={[0.22, 1.4, 0.18]} radius={0.03} smoothness={4}>
+        <meshStandardMaterial
+          color="#0a1020"
+          emissive="#0c1a3a"
+          emissiveIntensity={0.6}
+          roughness={0.1}
+          metalness={0.95}
+        />
+      </RoundedBox>
+
+      {[-0.4, -0.15, 0.1, 0.35].map((y, i) => (
+        <mesh key={i} position={[0, y, 0.092]}>
+          <boxGeometry args={[0.18, 0.008, 0.01]} />
+          <meshBasicMaterial color={slitColor} transparent opacity={0.25} />
+        </mesh>
+      ))}
+
+      <mesh ref={slitRef} position={[0, 0.08, 0.092]}>
+        <boxGeometry args={[0.16, 0.018, 0.01]} />
+        <meshStandardMaterial color={slitColor} emissive={slitColor} emissiveIntensity={3} />
+      </mesh>
+
+      <mesh position={[0.108, 0, 0]}>
+        <boxGeometry args={[0.005, 1.3, 0.01]} />
+        <meshBasicMaterial color={slitColor} transparent opacity={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+function TARSBody({
+  emotion,
+  isThinking,
+  isTransmitting,
+  mouse,
+  hovered,
+  spinCount,
+  personaColor,
+  diskColor,
+  slitColor,
+}) {
+  const bodyRef = useRef();
+  const currentRot = useRef({ x: 0, y: 0 });
+  const targetRot = useRef({ x: 0, y: 0 });
+  const spinRef = useRef(0);
+  const lastSpin = useRef(0);
+  const [isBlinking, setIsBlinking] = useState(false);
+
+  useEffect(() => {
+    let stopped = false;
+    let blinkTimer;
+    let nextTimer;
+
+    const doBlink = () => {
+      if (stopped) return;
+      setIsBlinking(true);
+      blinkTimer = setTimeout(() => setIsBlinking(false), 150);
+      nextTimer = setTimeout(doBlink, 2500 + Math.random() * 4000);
+    };
+
+    nextTimer = setTimeout(doBlink, 2000 + Math.random() * 3000);
+
+    return () => {
+      stopped = true;
+      if (blinkTimer) clearTimeout(blinkTimer);
+      if (nextTimer) clearTimeout(nextTimer);
+    };
+  }, []);
+
+  const panelOpen = ['thinking', 'celebrate', 'spin', 'konami', 'greeting'].includes(emotion);
+  const panelOpenL = panelOpen ? 0.9 : 0.0;
+  const panelOpenR = panelOpen ? -0.9 : 0.0;
+
+  useFrame(() => {
+    if (spinCount > lastSpin.current) {
+      spinRef.current += Math.PI * 2 * (spinCount - lastSpin.current);
+      lastSpin.current = spinCount;
+    }
+
+    if (spinRef.current > 0.01) {
+      spinRef.current -= 0.08;
+      if (bodyRef.current) bodyRef.current.rotation.y += 0.08;
+      return;
+    }
+
+    const hoverMult = hovered ? 1.5 : 1.0;
+
+    switch (emotion) {
+      case 'thinking':
+        targetRot.current.x = 0.25;
+        targetRot.current.y = Math.sin(Date.now() * 0.0008) * 0.12;
+        break;
+      case 'greeting':
+        targetRot.current.x = 0.3;
+        targetRot.current.y = 0;
+        break;
+      case 'shake':
+        targetRot.current.y = Math.sin(Date.now() * 0.02) * 0.4;
+        targetRot.current.x = 0;
+        break;
+      case 'celebrate':
+        targetRot.current.x = -0.15;
+        targetRot.current.y = Math.sin(Date.now() * 0.003) * 0.3;
+        break;
+      case 'typing':
+        // Lean toward the lower message/input area while interaction is active.
+        targetRot.current.y = -0.35;
+        targetRot.current.x = 0.25;
+        break;
+      case 'confused':
+        targetRot.current.x = Math.sin(Date.now() * 0.005) * 0.15;
+        targetRot.current.y = Math.cos(Date.now() * 0.004) * 0.2;
+        break;
+      default:
+        targetRot.current.y = mouse.x * 0.6 * hoverMult;
+        targetRot.current.x = -mouse.y * 0.35 * hoverMult;
+    }
+
+    currentRot.current.x += (targetRot.current.x - currentRot.current.x) * 0.04;
+    currentRot.current.y += (targetRot.current.y - currentRot.current.y) * 0.04;
+
+    if (bodyRef.current) {
+      bodyRef.current.rotation.x = currentRot.current.x;
+      bodyRef.current.rotation.y = currentRot.current.y;
+    }
+  });
+
+  const isCelebrating = emotion === 'celebrate' || emotion === 'konami';
+
+  return (
+    <group ref={bodyRef}>
+      <TARSPanel
+        position={[-0.26, 0, 0]}
+        rotation={[0, 0, 0]}
+        openAngle={panelOpenL}
+        slitColor={slitColor}
+        isBlinking={isBlinking}
+      />
+
+      <TARSPanel
+        position={[0.26, 0, 0]}
+        rotation={[0, Math.PI, 0]}
+        openAngle={panelOpenR}
+        slitColor={slitColor}
+        isBlinking={isBlinking}
+      />
+
+      <group scale={panelOpen ? 0.82 : 0.68}>
+        <GargantuaCore
+          isThinking={isThinking}
+          isTransmitting={isTransmitting}
+          isCelebrating={isCelebrating}
+          personaColor={personaColor}
+          diskColor={diskColor}
+        />
+      </group>
+
+      {[0.72, -0.72].map((y, i) => (
+        <mesh key={i} position={[0, y, 0]}>
+          <boxGeometry args={[0.56, 0.06, 0.16]} />
+          <meshStandardMaterial
+            color="#070e1a"
+            emissive="#0c1a3a"
+            emissiveIntensity={0.5}
+            roughness={0.1}
+            metalness={0.95}
+          />
+        </mesh>
+      ))}
+
+      <group position={[0, 0.82, 0]}>
+        <mesh>
+          <cylinderGeometry args={[0.012, 0.012, 0.22, 8]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 0.14, 0]}>
+          <sphereGeometry args={[0.038, 12, 12]} />
+          <meshStandardMaterial color={slitColor} emissive={slitColor} emissiveIntensity={4} />
+        </mesh>
+      </group>
+
+      <pointLight
+        position={[0, 0, 0.5]}
+        color={personaColor}
+        intensity={isCelebrating ? 3 : isThinking ? 2 : 1}
+        distance={2}
+        decay={2}
+      />
+    </group>
+  );
+}
+
+export default function RobotHead({ isThinking, isTransmitting }) {
+  const mouse = useMouse();
+  const [hovered, setHovered] = useState(false);
+  const [showPersona, setShowPersona] = useState(false);
+  const { persona, setPersona, config } = usePersona();
+  const { playNewChat, playSend } = useSound();
+
+  const {
+    emotion,
+    quote,
+    showQuote,
+    spinCount,
+    missionTime,
+    showClock,
+    handleClick,
+    handleDoubleClick,
+    handleHoverStart,
+    handleHoverEnd,
+    handleTypingStart,
+    handleTypingEnd,
+    handleEmptySubmit,
+    handleMessageReceived,
+    handleError,
+  } = useTARSState();
+
+  useEffect(() => {
+    window.TARS = {
+      onTypingStart: handleTypingStart,
+      onTypingEnd: handleTypingEnd,
+      onEmptySubmit: handleEmptySubmit,
+      onMessageReceived: handleMessageReceived,
+      onError: handleError,
+    };
+
+    return () => {
+      delete window.TARS;
+    };
+  }, [
+    handleTypingStart,
+    handleTypingEnd,
+    handleEmptySubmit,
+    handleMessageReceived,
+    handleError,
+  ]);
+
+  const handlePersonaChange = (key) => {
+    setPersona(key);
+    setShowPersona(false);
+    playNewChat();
+  };
+
+  const onRobotClick = () => {
+    playSend();
+    handleClick();
+  };
+
+  const emotionColor =
+    {
+      confused: '#ef4444',
+      celebrate: '#22c55e',
+      konami: '#f59e0b',
+      greeting: config.color,
+      shake: '#ef4444',
+      spin: '#38bdf8',
+      typing: '#93c5fd',
+    }[emotion] || config.color;
+
+  return (
+    <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 50 }}>
+      {showQuote && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '218px',
+            right: '0',
+            width: '230px',
+            padding: '12px 14px',
+            background: 'rgba(7,16,42,0.97)',
+            border: `0.5px solid ${emotionColor}50`,
+            borderRadius: '12px 12px 4px 12px',
+            backdropFilter: 'blur(16px)',
+            boxShadow: `0 0 24px ${emotionColor}25`,
+            animation: 'signal-in 0.3s ease forwards',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+            <div
+              style={{
+                width: '5px',
+                height: '5px',
+                borderRadius: '50%',
+                background: emotionColor,
+                boxShadow: `0 0 6px ${emotionColor}`,
+              }}
+            />
+            <span
+              style={{
+                fontFamily: 'var(--font-orbitron)',
+                fontSize: '8px',
+                color: emotionColor,
+                letterSpacing: '0.15em',
+              }}
+            >
+              {emotion.toUpperCase()}
+            </span>
+          </div>
+          <div
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '11px',
+              color: '#e6eef8',
+              letterSpacing: '0.03em',
+              lineHeight: 1.65,
+            }}
+          >
+            {quote}
+          </div>
+        </div>
+      )}
+
+      {showClock && !showQuote && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '218px',
+            right: '0',
+            padding: '10px 14px',
+            background: 'rgba(7,16,42,0.97)',
+            border: `0.5px solid ${config.color}40`,
+            borderRadius: '10px',
+            backdropFilter: 'blur(12px)',
+            animation: 'signal-in 0.2s ease forwards',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'var(--font-orbitron)',
+              fontSize: '8px',
+              color: 'var(--text-dim)',
+              letterSpacing: '0.15em',
+              marginBottom: '4px',
+            }}
+          >
+            MISSION CLOCK
+          </div>
+          <div
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '13px',
+              color: config.color,
+              letterSpacing: '0.1em',
+              textShadow: `0 0 10px ${config.color}`,
+            }}
+          >
+            {missionTime}
+          </div>
+          <div
+            style={{
+              marginTop: '4px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '9px',
+              color: 'var(--text-dim)',
+            }}
+          >
+            LAZARUS MISSION - DEEP SPACE
+          </div>
+        </div>
+      )}
+
+      {showPersona && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '218px',
+            right: '0',
+            width: '200px',
+            padding: '12px',
+            background: 'rgba(7,16,42,0.97)',
+            border: '0.5px solid rgba(168,85,247,0.25)',
+            borderRadius: '12px',
+            backdropFilter: 'blur(16px)',
+            animation: 'signal-in 0.25s ease forwards',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'var(--font-orbitron)',
+              fontSize: '9px',
+              color: 'var(--text-dim)',
+              letterSpacing: '0.15em',
+              marginBottom: '10px',
+            }}
+          >
+            SELECT PERSONA
+          </div>
+          {Object.entries(PERSONA_CONFIGS).map(([key, cfg]) => (
+            <button
+              key={key}
+              onClick={() => handlePersonaChange(key)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 10px',
+                marginBottom: '4px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                border: 'none',
+                background: persona === key ? `${cfg.color}18` : 'transparent',
+                outline: persona === key ? `0.5px solid ${cfg.color}50` : '0.5px solid transparent',
+                transition: 'all 0.15s',
+              }}
+            >
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: cfg.color,
+                  boxShadow: `0 0 6px ${cfg.color}`,
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '10px',
+                  color: persona === key ? cfg.color : 'var(--text-muted)',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                {cfg.label}
+              </span>
+            </button>
+          ))}
+          <div
+            style={{
+              marginTop: '8px',
+              paddingTop: '8px',
+              borderTop: '0.5px solid rgba(255,255,255,0.06)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '9px',
+              color: 'var(--text-dim)',
+              textAlign: 'center',
+              letterSpacing: '0.1em',
+            }}
+          >
+            TRY: UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT
+          </div>
+        </div>
+      )}
+
+      <div
+        onClick={onRobotClick}
+        onDoubleClick={handleDoubleClick}
+        onMouseEnter={() => {
+          setHovered(true);
+          handleHoverStart();
+        }}
+        onMouseLeave={() => {
+          setHovered(false);
+          handleHoverEnd();
+        }}
+        style={{
+          width: '160px',
+          height: '200px',
+          cursor: 'pointer',
+          filter: `drop-shadow(0 0 ${hovered ? 36 : 20}px ${emotionColor}${hovered ? 'b3' : '66'})`,
+          transition: 'filter 0.4s',
+        }}
+      >
+        <Canvas
+          camera={{ position: [0, 0, 3.6], fov: 38 }}
+          style={{ background: 'transparent' }}
+          gl={{ alpha: true, antialias: true }}
+        >
+          <ambientLight intensity={0.15} />
+          <directionalLight position={[3, 4, 3]} intensity={0.4} />
+          <Float speed={isThinking ? 2.5 : 1.5} floatIntensity={0.3} rotationIntensity={0}>
+            <TARSBody
+              emotion={isThinking ? 'thinking' : emotion}
+              isThinking={isThinking}
+              isTransmitting={isTransmitting}
+              mouse={mouse}
+              hovered={hovered}
+              spinCount={spinCount}
+              personaColor={emotionColor}
+              diskColor={config.diskColor}
+              slitColor={config.slitColor}
+            />
+          </Float>
+        </Canvas>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '0 4px',
+          marginTop: '-8px',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '8px',
+            letterSpacing: '0.15em',
+            color: hovered ? emotionColor : 'var(--text-dim)',
+            transition: 'color 0.4s',
+          }}
+        >
+          TARS
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowPersona((p) => !p);
+          }}
+          style={{
+            background: 'none',
+            border: `0.5px solid ${config.color}40`,
+            borderRadius: '6px',
+            padding: '3px 8px',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '8px',
+            color: config.color,
+            letterSpacing: '0.08em',
+            transition: 'all 0.2s',
+          }}
+        >
+          {config.label.split(' ')[0]}
+        </button>
+      </div>
+    </div>
+  );
+}

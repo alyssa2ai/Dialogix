@@ -41,7 +41,7 @@ exports.getSession = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     console.log(`[CHAT] sendMessage hit for session ${req.params.id} by user ${req.user.userId}`);
-    const { message } = req.body;
+    const { message, systemPrompt } = req.body;
     if (!process.env.GROQ_API_KEY) {
       return res.status(500).json({ message: 'Missing GROQ_API_KEY in server .env' });
     }
@@ -68,7 +68,12 @@ exports.sendMessage = async (req, res) => {
       groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
         messages: [
-          { role: 'system', content: 'You are Dialogix, a helpful and friendly AI assistant.' },
+          {
+            role: 'system',
+            content:
+              systemPrompt ||
+              'You are Synapse Core - an interstellar AI assistant. Be pragmatic, calm, and precise. Use space metaphors sparingly. Never start with "I". Avoid filler phrases like "Certainly!" or "Great question!"',
+          },
           ...history
         ],
         max_tokens: 1024
