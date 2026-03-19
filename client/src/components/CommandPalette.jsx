@@ -8,7 +8,7 @@ import { useSound } from '../hooks/useSound';
 const COMMANDS = [
   { id: 'new-chat', group: 'MISSION', icon: '+', label: 'New Transmission', shortcut: 'N', action: 'new-chat' },
   { id: 'clear-chat', group: 'MISSION', icon: 'x', label: 'Clear Current Session', shortcut: 'X', action: 'clear-chat' },
-  { id: 'export-md', group: 'MISSION', icon: '>', label: 'Export as Markdown', shortcut: 'E', action: 'export-md' },
+  { id: 'export-md', group: 'MISSION', icon: 'v', label: 'Export as Markdown', shortcut: 'E', action: 'export-md' },
 
   { id: 'p-synapse', group: 'PERSONA', icon: 'o', label: 'Synapse Core', shortcut: '1', action: 'persona-synapse' },
   { id: 'p-teacher', group: 'PERSONA', icon: 'o', label: 'Teacher Mode', shortcut: '2', action: 'persona-teacher' },

@@ -237,6 +237,8 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
         style={{
           flex: '1 1 0',
           height: 0,
+          background:
+            'radial-gradient(circle at 15% 20%, rgba(168,85,247,0.09), transparent 45%), radial-gradient(circle at 85% 80%, rgba(59,130,246,0.08), transparent 40%), rgba(8,11,21,0.92)',
           overflowY: 'auto',
           overflowX: 'hidden',
           scrollBehavior: 'smooth',

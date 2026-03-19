@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useTypewriter } from '../hooks/useTypewriter';
 
@@ -18,21 +18,18 @@ export default function MessageBubble({ message, username, isLatest }) {
     hour: '2-digit', minute: '2-digit'
   });
 
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.style.animation = 'none';
-      void ref.current.offsetHeight;
-      ref.current.style.animation = 'signal-in 0.35s cubic-bezier(0.2,0.9,0.3,1) forwards';
-    }
-  }, []);
-
   return (
-    <div ref={ref} style={{
-      display: 'flex', alignItems: 'flex-end', gap: '10px',
-      padding: '0 20px',
-      flexDirection: isUser ? 'row-reverse' : 'row',
-      opacity: 0
-    }}>
+    <div
+      ref={ref}
+      className="signal-in"
+      style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: '10px',
+        padding: '0 20px',
+        flexDirection: isUser ? 'row-reverse' : 'row',
+      }}
+    >
       {/* Avatar */}
       <div style={{
         width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
@@ -50,19 +47,20 @@ export default function MessageBubble({ message, username, isLatest }) {
       </div>
 
       {/* Bubble */}
-      <div style={{ maxWidth: '70%' }}>
+      <div style={{ maxWidth: '68%', minWidth: '80px' }}>
         <div style={{
           padding: '12px 16px',
           borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
           fontSize: '14px', lineHeight: '1.65',
           fontFamily: 'var(--font-inter)',
+          wordBreak: 'break-word',
           ...(isUser ? {
             background: 'linear-gradient(135deg,#3b82f6,#06b6d4)',
             color: 'white',
             boxShadow: '0 0 20px rgba(59,130,246,0.35), 0 4px 12px rgba(0,0,0,0.3)'
           } : {
-            background: 'linear-gradient(135deg,rgba(168,85,247,0.12),rgba(99,102,241,0.12))',
-            border: '0.5px solid rgba(168,85,247,0.25)',
+            background: 'linear-gradient(135deg,rgba(168,85,247,0.18),rgba(99,102,241,0.18))',
+            border: '0.5px solid rgba(168,85,247,0.35)',
             color: '#e6eef8',
             backdropFilter: 'blur(8px)',
             boxShadow: '0 0 16px rgba(168,85,247,0.1)'
