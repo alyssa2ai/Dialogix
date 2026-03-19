@@ -392,7 +392,7 @@ export default function RobotHead({ isThinking, isTransmitting }) {
     }[emotion] || config.color;
 
   return (
-    <div style={{ position: 'fixed', bottom: '32px', right: '24px', zIndex: 50 }}>
+    <div style={{ position: 'fixed', bottom: '36px', right: '28px', zIndex: 50 }}>
       {showQuote && (
         <div
           style={{

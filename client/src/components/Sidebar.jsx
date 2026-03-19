@@ -29,10 +29,10 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
   const olderSessions  = sessions.filter(s => new Date(s.updatedAt).toDateString() !== today);
 
   return (
-    <div style={{
+    <div className="sidebar-zone" style={{
       width: '260px', height: '100%', flexShrink: 0,
-      background: 'rgba(7,16,42,0.85)',
-      borderRight: '0.5px solid rgba(168,85,247,0.15)',
+      background: 'rgba(3, 7, 20, 0.98)',
+      borderRight: '0.5px solid rgba(168,85,247,0.2)',
       backdropFilter: 'blur(20px)',
       display: 'flex', flexDirection: 'column',
       position: 'relative', zIndex: 10

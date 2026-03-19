@@ -202,6 +202,7 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
       minHeight: 0,
       position: 'relative',
       zIndex: 1,
+      background: 'rgba(2,6,23,0.85)',
     }}>
 
       <div style={{
@@ -232,6 +233,7 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
 
       {/* Messages */}
       <div
+        className="chat-zone"
         ref={messagesRef}
         onScroll={handleMessagesScroll}
         style={{
@@ -250,6 +252,10 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
           flexDirection: 'column',
           gap: '16px',
           minHeight: 0,
+          backgroundImage:
+            'linear-gradient(rgba(168,85,247,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.015) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          backgroundAttachment: 'local',
         }}
       >
         {messages.length === 0 && (

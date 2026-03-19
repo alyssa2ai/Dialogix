@@ -55,15 +55,15 @@ export default function MessageBubble({ message, username, isLatest }) {
           fontFamily: 'var(--font-inter)',
           wordBreak: 'break-word',
           ...(isUser ? {
-            background: 'linear-gradient(135deg,#3b82f6,#06b6d4)',
+            background: 'linear-gradient(135deg, #2563eb, #0891b2)',
             color: 'white',
-            boxShadow: '0 0 20px rgba(59,130,246,0.35), 0 4px 12px rgba(0,0,0,0.3)'
+            boxShadow: '0 0 24px rgba(59,130,246,0.4), 0 4px 16px rgba(0,0,0,0.4)'
           } : {
-            background: 'linear-gradient(135deg,rgba(168,85,247,0.18),rgba(99,102,241,0.18))',
-            border: '0.5px solid rgba(168,85,247,0.35)',
+            background: 'rgba(15, 10, 40, 0.9)',
+            border: '0.5px solid rgba(168,85,247,0.5)',
             color: '#e6eef8',
-            backdropFilter: 'blur(8px)',
-            boxShadow: '0 0 16px rgba(168,85,247,0.1)'
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 0 0 0.5px rgba(168,85,247,0.3), 0 0 24px rgba(168,85,247,0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
           })
         }}>
           {isUser ? (

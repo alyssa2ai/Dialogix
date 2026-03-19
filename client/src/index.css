@@ -172,3 +172,26 @@ div:hover > .session-actions,
 div:hover .session-actions {
   opacity: 1 !important;
 }
+
+/* Zone separation */
+.sidebar-zone {
+  background: rgba(4, 10, 28, 0.95) !important;
+  border-right: 0.5px solid rgba(168, 85, 247, 0.2) !important;
+}
+
+.core-zone {
+  background: rgba(7, 12, 35, 0.6) !important;
+  border-bottom: 0.5px solid rgba(168, 85, 247, 0.12) !important;
+}
+
+.chat-zone {
+  background: rgba(2, 6, 23, 0.85) !important;
+}
+
+/* Glowing bot bubble border */
+.bubble-bot-glow {
+  box-shadow:
+    0 0 0 0.5px rgba(168,85,247,0.5),
+    0 0 20px rgba(168,85,247,0.12),
+    inset 0 0 20px rgba(168,85,247,0.03) !important;
+}
