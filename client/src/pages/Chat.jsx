@@ -76,13 +76,22 @@ export default function Chat() {
       />
 
       {/* Right side — core + chat stacked */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+        minHeight: 0,
+        overflow: 'hidden',
+        background: 'linear-gradient(180deg, rgba(10,14,28,0.95), rgba(3,6,14,0.98))',
+      }}>
 
         {/* AI Core panel */}
         <div style={{
-          height: '200px',
+          height: '180px',
           flexShrink: 0,
-          borderBottom: '0.5px solid rgba(168,85,247,0.15)',
+          borderBottom: '0.5px solid rgba(168,85,247,0.22)',
+          background: 'linear-gradient(145deg, rgba(17,24,39,0.72), rgba(7,10,20,0.9))',
           position: 'relative',
           overflow: 'hidden',
         }}>
