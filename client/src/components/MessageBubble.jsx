@@ -47,7 +47,7 @@ export default function MessageBubble({ message, username, isLatest }) {
       </div>
 
       {/* Bubble */}
-      <div style={{ maxWidth: '68%', minWidth: '80px' }}>
+      <div style={{ maxWidth: '72%', minWidth: '80px' }}>
         <div
           className={isUser ? 'bubble-user' : 'bubble-bot'}
           style={{
@@ -64,7 +64,7 @@ export default function MessageBubble({ message, username, isLatest }) {
             <>
               <ReactMarkdown
                 components={{
-                  p:      ({children}) => <p style={{ margin: '0 0 8px' }}>{children}</p>,
+                  p:      ({children}) => <p style={{ margin: '0 0 10px', color: '#c8d3e8', lineHeight: 1.75 }}>{children}</p>,
                   strong: ({children}) => <strong style={{ fontWeight: 600, color: 'var(--arc-bright)' }}>{children}</strong>,
                   ol:     ({children}) => <ol style={{ paddingLeft: '20px', margin: '8px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>{children}</ol>,
                   ul:     ({children}) => <ul style={{ paddingLeft: '20px', margin: '8px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>{children}</ul>,

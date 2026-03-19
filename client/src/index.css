@@ -47,15 +47,15 @@ html, body, #root {
 .nebula-bg {
   position: fixed; inset: 0; z-index: 0;
   background:
-    radial-gradient(ellipse 120% 80% at 65% 45%,
-      rgba(88,28,135,0.18) 0%,
-      rgba(30,15,60,0.12) 30%,
+    radial-gradient(ellipse 100% 70% at 70% 40%,
+      rgba(88,28,135,0.28) 0%,
+      rgba(45,20,90,0.18) 35%,
       transparent 65%),
-    radial-gradient(ellipse 60% 50% at 75% 55%,
-      rgba(56,189,248,0.06) 0%,
+    radial-gradient(ellipse 50% 45% at 75% 60%,
+      rgba(56,189,248,0.1) 0%,
       transparent 50%),
-    radial-gradient(ellipse 80% 60% at 20% 80%,
-      rgba(124,92,191,0.08) 0%,
+    radial-gradient(ellipse 70% 50% at 15% 85%,
+      rgba(124,92,191,0.14) 0%,
       transparent 55%),
     var(--deep);
   pointer-events: none;

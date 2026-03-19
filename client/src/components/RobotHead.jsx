@@ -392,8 +392,20 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
     }[emotion] || config.color;
 
   return (
-    <div style={{ position: 'fixed', bottom: '36px', right: '28px', zIndex: 50 }}>
-      {showQuote && (
+    <div
+      style={embedded ? {
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        zIndex: 50,
+      } : {
+        position: 'fixed',
+        bottom: '36px',
+        right: '28px',
+        zIndex: 50,
+      }}
+    >
+      {!embedded && showQuote && (
         <div
           style={{
             position: 'absolute',
@@ -444,7 +456,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
         </div>
       )}
 
-      {showClock && !showQuote && (
+      {!embedded && showClock && !showQuote && (
         <div
           style={{
             position: 'absolute',
@@ -493,7 +505,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
         </div>
       )}
 
-      {showPersona && (
+      {!embedded && showPersona && (
         <div
           style={{
             position: 'absolute',
@@ -626,8 +638,61 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
             />
           </Float>
         </Canvas>
+
+        {embedded && showQuote && (
+          <div style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: '10px',
+            right: '10px',
+            padding: '8px 12px',
+            background: 'rgba(4,8,20,0.96)',
+            border: `0.5px solid ${emotionColor}50`,
+            borderRadius: '8px',
+            backdropFilter: 'blur(12px)',
+            boxShadow: `0 0 16px ${emotionColor}20`,
+            animation: 'signal-in 0.3s ease forwards',
+            zIndex: 5,
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              marginBottom: '4px',
+            }}>
+              <div style={{
+                width: '4px',
+                height: '4px',
+                borderRadius: '50%',
+                background: emotionColor,
+                boxShadow: `0 0 4px ${emotionColor}`,
+              }} />
+              <span style={{
+                fontFamily: 'var(--font-ui)',
+                fontSize: '8px',
+                color: emotionColor,
+                letterSpacing: '0.12em',
+              }}>
+                {emotion.toUpperCase()}
+              </span>
+            </div>
+            <div style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10px',
+              color: 'var(--text-1)',
+              lineHeight: 1.55,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}>
+              {quote}
+            </div>
+          </div>
+        )}
       </div>
 
+      {!embedded && (
       <div
         style={{
           display: 'flex',
@@ -670,6 +735,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
           {config.label.split(' ')[0]}
         </button>
       </div>
+      )}
     </div>
   );
 }

@@ -71,34 +71,73 @@ export default function Chat() {
         overflow: 'hidden'
       }}>
 
+        {/* Logo header — always visible */}
+        <div style={{
+          padding: sidebarCollapsed ? '16px 0' : '16px 20px',
+          borderBottom: '0.5px solid rgba(124,92,191,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          flexShrink: 0,
+          background: 'rgba(3,6,16,0.8)'
+        }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '10px',
+            flexShrink: 0,
+            background: 'linear-gradient(135deg, #7c5cbf, #2563eb)',
+            boxShadow: '0 0 16px rgba(124,92,191,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: sidebarCollapsed ? '0 auto' : '0'
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: '14px',
+              color: 'white'
+            }}>D</span>
+          </div>
+          {!sidebarCollapsed && (
+            <div>
+              <div style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '15px',
+                fontWeight: 600,
+                color: 'var(--text-1)',
+                letterSpacing: '0.06em'
+              }}>DIALOGIX</div>
+              <div style={{
+                fontFamily: 'var(--font-ui)',
+                fontSize: '8px',
+                color: 'var(--text-3)',
+                letterSpacing: '0.15em',
+                marginTop: '1px'
+              }}>SYNAPSE CORE v1.0</div>
+            </div>
+          )}
+        </div>
+
         {/* TARS viewport — top section */}
         <div style={{
-          height: '280px', flexShrink: 0, position: 'relative',
+          height: sidebarCollapsed ? '0' : '260px',
+          flexShrink: 0,
+          position: 'relative',
           borderBottom: '0.5px solid rgba(124,92,191,0.15)',
           overflow: 'hidden',
-          background: 'rgba(4,8,20,0.6)'
+          background: 'rgba(4,8,20,0.7)',
+          transition: 'height 0.35s ease'
         }}>
           {/* Radial glow behind TARS */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'radial-gradient(ellipse 80% 80% at 50% 60%, rgba(124,92,191,0.12), transparent)',
+            background: 'radial-gradient(ellipse 80% 80% at 50% 50%, rgba(124,92,191,0.1), transparent)',
             pointerEvents: 'none'
           }}/>
 
-          {sidebarCollapsed ? (
-            /* Collapsed — just a glowing dot */
-            <div style={{
-              height: '100%', display: 'flex', alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <div style={{
-                width: '8px', height: '8px', borderRadius: '50%',
-                background: 'var(--arc-bright)',
-                boxShadow: '0 0 12px var(--arc-bright)',
-                animation: 'pulse-ring 2s ease-in-out infinite'
-              }}/>
-            </div>
-          ) : (
+          {!sidebarCollapsed && (
             /* Expanded — full TARS canvas */
             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
               <RobotHead
