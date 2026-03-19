@@ -3,7 +3,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewChat, onDeleteChat, onRenameChat }) {
+export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewChat, onDeleteChat, onRenameChat, embedded }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [renamingId, setRenamingId] = useState(null);
@@ -30,49 +30,52 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
 
   return (
     <div className="sidebar-zone" style={{
-      width: '260px', height: '100%', flexShrink: 0,
-      background: 'rgba(3, 7, 20, 0.98)',
-      borderRight: '0.5px solid rgba(168,85,247,0.2)',
+      height: '100%', flexShrink: 0,
+      background: embedded ? 'transparent' : 'rgba(3, 7, 20, 0.98)',
+      borderRight: embedded ? 'none' : '0.5px solid rgba(124,92,191,0.2)',
       backdropFilter: 'blur(20px)',
       display: 'flex', flexDirection: 'column',
-      position: 'relative', zIndex: 10
+      position: 'relative', zIndex: 10,
+      overflow: 'hidden'
     }}>
 
-      {/* Logo */}
+      {/* Logo — only show when not embedded */}
+      {!embedded && (
       <div style={{ padding: '20px', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             width: '32px', height: '32px', borderRadius: '10px',
-            background: 'linear-gradient(135deg,#3b82f6,#a855f7)',
-            boxShadow: '0 0 16px rgba(168,85,247,0.5)',
+            background: 'linear-gradient(135deg, var(--arc), #6d28d9)',
+            boxShadow: '0 0 16px rgba(124,92,191,0.5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <span style={{ color: 'white', fontFamily: 'var(--font-orbitron)', fontWeight: 700, fontSize: '14px' }}>D</span>
+            <span style={{ color: 'white', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px' }}>D</span>
           </div>
           <div>
-            <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: '14px', fontWeight: 600, color: '#e6eef8', letterSpacing: '0.08em' }}>DIALOGIX</div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>SYNAPSE CORE v1.0</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 600, color: 'var(--text-1)', letterSpacing: '0.08em' }}>DIALOGIX</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-3)', letterSpacing: '0.1em' }}>SYNAPSE CORE v1.0</div>
           </div>
         </div>
       </div>
+      )}
 
       {/* New chat button */}
       <div style={{ padding: '12px' }}>
         <button onClick={onNewChat} style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-          padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
-          background: 'rgba(168,85,247,0.08)',
-          border: '0.5px solid rgba(168,85,247,0.25)',
-          color: 'var(--text-muted)', fontSize: '13px',
-          fontFamily: 'var(--font-inter)', transition: 'all 0.2s'
+          padding: '9px 14px', borderRadius: '8px', cursor: 'pointer',
+          background: 'rgba(124,92,191,0.08)',
+          border: '0.5px solid rgba(124,92,191,0.25)',
+          color: 'var(--text-2)', fontSize: '12px',
+          fontFamily: 'var(--font-mono)', transition: 'all 0.2s', letterSpacing: '0.05em'
         }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(168,85,247,0.15)'; e.currentTarget.style.color = '#e6eef8'; e.currentTarget.style.boxShadow = '0 0 12px rgba(168,85,247,0.2)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.boxShadow = 'none'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,92,191,0.15)'; e.currentTarget.style.color = 'var(--text-1)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(124,92,191,0.2)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(124,92,191,0.08)'; e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.boxShadow = 'none'; }}
         >
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
           </svg>
-          New transmission
+          NEW TRANSMISSION
         </button>
       </div>
 
@@ -81,7 +84,7 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
 
         {todaySessions.length > 0 && (
           <>
-            <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: '9px', color: 'var(--text-dim)', padding: '10px 8px 6px', letterSpacing: '0.15em' }}>TODAY</div>
+            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', color: 'var(--text-3)', padding: '10px 8px 6px', letterSpacing: '0.2em' }}>TODAY</div>
             {todaySessions.map(s => (
               <SessionItem key={s._id} session={s} isActive={s._id === activeChatId}
                 isRenaming={renamingId === s._id} renameValue={renameValue}
@@ -97,7 +100,7 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
 
         {olderSessions.length > 0 && (
           <>
-            <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: '9px', color: 'var(--text-dim)', padding: '10px 8px 6px', letterSpacing: '0.15em' }}>PREVIOUS</div>
+            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', color: 'var(--text-3)', padding: '10px 8px 6px', letterSpacing: '0.2em' }}>PREVIOUS</div>
             {olderSessions.map(s => (
               <SessionItem key={s._id} session={s} isActive={s._id === activeChatId}
                 isRenaming={renamingId === s._id} renameValue={renameValue}

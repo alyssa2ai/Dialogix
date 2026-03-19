@@ -1,197 +1,174 @@
 @import "tailwindcss";
 
-/* ── Fonts ── */
 :root {
-  --font-orbitron: 'Orbitron', sans-serif;
-  --font-inter: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Exo 2', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-ui:      'Space Mono', monospace;
 
-  /* ── Color tokens ── */
-  --bg-deep:     #020617;
-  --bg-navy:     #07102a;
-  --bg-card:     rgba(255,255,255,0.03);
-  --bg-card-hover: rgba(255,255,255,0.06);
+  /* Core palette — based on actual Interstellar film color grading */
+  --void:         #01030a;       /* true deep space black */
+  --deep:         #040812;       /* main bg */
+  --surface:      #080f1e;       /* card surfaces */
+  --surface2:     #0c1428;       /* elevated surfaces */
+  --rim:          rgba(255,255,255,0.06);  /* subtle borders */
+  --rim-glow:     rgba(147,112,219,0.35); /* purple rim */
 
-  --primary:     #3b82f6;
-  --accent:      #a855f7;
-  --holo:        #06b6d4;
+  /* Accent system — ONE dominant, rest are supporting */
+  --arc:          #7c5cbf;       /* primary purple — less saturated, more cinematic */
+  --arc-bright:   #a78bfa;       /* highlight purple */
+  --arc-dim:      rgba(124,92,191,0.15);
+  --pulse:        #38bdf8;       /* cyan — user messages, highlights */
+  --pulse-dim:    rgba(56,189,248,0.12);
+  --amber:        #f59e0b;       /* TARS amber — accretion disk */
+  --green-ok:     #10b981;       /* status online */
+  --danger:       #ef4444;
 
-  --glow-blue:   rgba(59,130,246,0.35);
-  --glow-purple: rgba(168,85,247,0.35);
-  --glow-cyan:   rgba(6,182,212,0.35);
-
-  --text-main:   #e6eef8;
-  --text-muted:  #9aa7bf;
-  --text-dim:    #4a5568;
-
-  --border-dim:  rgba(255,255,255,0.06);
-  --border-glow: rgba(168,85,247,0.3);
+  --text-1: #e8edf5;   /* primary text */
+  --text-2: #8892a4;   /* secondary */
+  --text-3: #4a5568;   /* dim/disabled */
 }
 
-/* ── Base ── */
-*, *::before, *::after { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: var(--font-inter);
-  color: var(--text-main);
-  background-color: var(--bg-deep);
-  background-image:
-    radial-gradient(ellipse 1200px 600px at 15% 10%, rgba(59,130,246,0.07) 0%, transparent 70%),
-    radial-gradient(ellipse 900px 500px at 85% 85%, rgba(168,85,247,0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 600px 400px at 50% 50%, rgba(6,182,212,0.03) 0%, transparent 70%);
-  overflow: hidden;
+  height: 100%; overflow: hidden;
+  background: var(--void);
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(168,85,247,0.3);
-  border-radius: 2px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(168,85,247,0.6);
+::-webkit-scrollbar-thumb { background: rgba(124,92,191,0.4); border-radius: 2px; }
+
+/* ── Nebula background ── */
+.nebula-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 120% 80% at 65% 45%,
+      rgba(88,28,135,0.18) 0%,
+      rgba(30,15,60,0.12) 30%,
+      transparent 65%),
+    radial-gradient(ellipse 60% 50% at 75% 55%,
+      rgba(56,189,248,0.06) 0%,
+      transparent 50%),
+    radial-gradient(ellipse 80% 60% at 20% 80%,
+      rgba(124,92,191,0.08) 0%,
+      transparent 55%),
+    var(--deep);
+  pointer-events: none;
 }
 
-/* ── Glassmorphism card ── */
+/* ── Noise grain overlay ── */
+.nebula-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ── Horizon line ── */
+.horizon {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 1px; z-index: 1;
+  background: linear-gradient(90deg, transparent, rgba(124,92,191,0.4) 30%, rgba(56,189,248,0.3) 60%, transparent);
+}
+
+/* ── Glass surface ── */
 .glass {
-  background: var(--bg-card);
-  border: 0.5px solid var(--border-dim);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(8,15,30,0.75);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 0.5px solid var(--rim);
 }
 
-.glass-hover:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-glow);
+.glass-arc {
+  background: rgba(8,15,30,0.85);
+  backdrop-filter: blur(20px);
+  border: 0.5px solid var(--rim-glow);
+  box-shadow: 0 0 0 0.5px rgba(124,92,191,0.15), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
-/* ── Glow effects ── */
-.glow-blue  { box-shadow: 0 0 20px var(--glow-blue); }
-.glow-purple{ box-shadow: 0 0 20px var(--glow-purple); }
-.glow-cyan  { box-shadow: 0 0 20px var(--glow-cyan); }
-
-.text-glow-blue   { text-shadow: 0 0 20px rgba(59,130,246,0.8); }
-.text-glow-purple { text-shadow: 0 0 20px rgba(168,85,247,0.8); }
-
-/* ── Orbitron headings ── */
-.font-orbitron { font-family: var(--font-orbitron); }
-.font-mono-code { font-family: var(--font-mono); }
-
-/* ── User message bubble ── */
+/* ── User bubble ── */
 .bubble-user {
-  background: linear-gradient(135deg, #3b82f6, #06b6d4);
-  box-shadow: 0 0 16px rgba(59,130,246,0.4), 0 2px 8px rgba(0,0,0,0.3);
-}
-
-/* ── Bot message bubble ── */
-.bubble-bot {
-  background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.15));
-  border: 0.5px solid rgba(168,85,247,0.3);
+  background: linear-gradient(135deg, rgba(37,99,235,0.85), rgba(8,145,178,0.85));
+  border: 0.5px solid rgba(56,189,248,0.4);
+  box-shadow: 0 0 20px rgba(56,189,248,0.2), 0 0 0 0.5px rgba(56,189,248,0.2);
   backdrop-filter: blur(8px);
-  box-shadow: 0 0 12px rgba(168,85,247,0.15);
 }
 
-/* ── Input glow on focus ── */
-.input-space:focus-within {
-  border-color: rgba(168,85,247,0.6) !important;
-  box-shadow: 0 0 0 1px rgba(168,85,247,0.2), 0 0 20px rgba(168,85,247,0.15);
+/* ── Bot bubble ── */
+.bubble-bot {
+  background: rgba(8,15,30,0.9);
+  border: 0.5px solid rgba(124,92,191,0.5);
+  box-shadow:
+    0 0 0 0.5px rgba(124,92,191,0.2),
+    0 0 24px rgba(124,92,191,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
 }
 
-/* ── Pulse animation for thinking state ── */
-@keyframes pulse-ring {
-  0%   { transform: scale(1);   opacity: 0.8; }
-  50%  { transform: scale(1.08); opacity: 0.4; }
-  100% { transform: scale(1);   opacity: 0.8; }
+/* ── Input field ── */
+.input-field {
+  background: rgba(4,8,20,0.8);
+  border: 0.5px solid rgba(124,92,191,0.25);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field:focus-within {
+  border-color: rgba(124,92,191,0.7);
+  box-shadow: 0 0 0 1px rgba(124,92,191,0.15), 0 0 24px rgba(124,92,191,0.1);
 }
 
-/* ── Float animation ── */
+/* ── Animations ── */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-8px) rotate(0.5deg); }
+  66%       { transform: translateY(-4px) rotate(-0.5deg); }
 }
 
-/* ── Beam transmit ── */
-@keyframes beam {
-  0%   { opacity: 0; transform: scaleX(0); }
-  50%  { opacity: 1; transform: scaleX(1); }
-  100% { opacity: 0; transform: scaleX(1); }
-}
-
-/* ── Signal arrival (message fade in) ── */
 @keyframes signal-in {
-  0%   { opacity: 0; transform: translateY(8px) scale(0.97); filter: blur(4px); }
-  100% { opacity: 1; transform: translateY(0)  scale(1);    filter: blur(0); }
-}
-
-.signal-in {
-  animation: signal-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
-}
-
-/* ── Typing dots ── */
-@keyframes typing-dot {
-  0%, 100% { transform: translateY(0);    opacity: 0.3; }
-  50%       { transform: translateY(-5px); opacity: 1; }
+  0%   { opacity: 0; transform: translateY(10px) scale(0.97); filter: blur(6px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
 @keyframes cursor-blink {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0; }
+  0%, 100% { opacity: 1; } 50% { opacity: 0; }
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50%       { transform: scale(1.08); opacity: 0.3; }
 }
 
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  to   { transform: rotate(360deg); }
 }
 
-/* ── Scanline overlay (subtle) ── */
-.scanlines::after {
+@keyframes typing-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.3; }
+  50%       { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes scan {
+  0%   { transform: translateY(-100%); opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+.signal-in { animation: signal-in 0.4s cubic-bezier(0.2,0.9,0.3,1) forwards; }
+
+/* ── Scanline sweep ── */
+.scanline::after {
   content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.03) 2px,
-    rgba(0,0,0,0.03) 4px
-  );
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(0deg, transparent 50%, rgba(124,92,191,0.015) 51%);
+  background-size: 100% 4px;
   pointer-events: none;
-  z-index: 9999;
+  animation: none;
 }
 
-/* ── Hover actions visibility ── */
-div:hover > .session-actions,
-div:hover .session-actions {
-  opacity: 1 !important;
-}
-
-/* Zone separation */
-.sidebar-zone {
-  background: rgba(4, 10, 28, 0.95) !important;
-  border-right: 0.5px solid rgba(168, 85, 247, 0.2) !important;
-}
-
-.core-zone {
-  background: rgba(7, 12, 35, 0.6) !important;
-  border-bottom: 0.5px solid rgba(168, 85, 247, 0.12) !important;
-}
-
-.chat-zone {
-  background: rgba(2, 6, 23, 0.85) !important;
-}
-
-/* Glowing bot bubble border */
-.bubble-bot-glow {
-  box-shadow:
-    0 0 0 0.5px rgba(168,85,247,0.5),
-    0 0 20px rgba(168,85,247,0.12),
-    inset 0 0 20px rgba(168,85,247,0.03) !important;
-}
+/* ── Session hover actions ── */
+div:hover .session-actions { opacity: 1 !important; }

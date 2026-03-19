@@ -176,20 +176,49 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
       position: 'relative', zIndex: 1
     }}>
       <div style={{
-        width: '64px', height: '64px', borderRadius: '20px', marginBottom: '20px',
-        background: 'linear-gradient(135deg,#3b82f6,#a855f7)',
-        boxShadow: '0 0 40px rgba(168,85,247,0.5)',
+        width: '200px', height: '200px', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(124,92,191,0.15) 0%, transparent 70%)',
+        border: '0.5px solid rgba(124,92,191,0.2)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        animation: 'float 4s ease-in-out infinite'
+        marginBottom: '24px', position: 'relative',
+        animation: 'float 6s ease-in-out infinite'
       }}>
-        <span style={{ fontFamily: 'var(--font-orbitron)', fontWeight: 700, fontSize: '24px', color: 'white' }}>D</span>
+        <div style={{
+          width: '80px', height: '80px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(124,92,191,0.4) 0%, rgba(56,189,248,0.1) 60%, transparent)',
+          boxShadow: '0 0 40px rgba(124,92,191,0.3)'
+        }}/>
+        <div style={{
+          position: 'absolute', inset: '-20px',
+          borderRadius: '50%', border: '0.5px solid rgba(124,92,191,0.25)',
+          animation: 'spin-slow 8s linear infinite'
+        }}/>
       </div>
-      <h2 style={{ fontFamily: 'var(--font-orbitron)', fontSize: '18px', color: '#e6eef8', marginBottom: '8px', letterSpacing: '0.05em' }}>
+      <div style={{
+        fontFamily: 'var(--font-display)', fontSize: '18px',
+        fontWeight: 600, color: 'var(--text-1)',
+        letterSpacing: '0.08em', marginBottom: '8px'
+      }}>
         AWAITING TRANSMISSION
-      </h2>
-      <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'var(--font-inter)' }}>
-        Start a new chat or select one from the sidebar
-      </p>
+      </div>
+      <div style={{
+        fontFamily: 'var(--font-mono)', fontSize: '11px',
+        color: 'var(--text-3)', letterSpacing: '0.1em'
+      }}>
+        SELECT A SESSION OR START A NEW ONE
+      </div>
+      <div style={{
+        marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px',
+        fontFamily: 'var(--font-ui)', fontSize: '10px', color: 'var(--text-3)'
+      }}>
+        <kbd style={{
+          padding: '3px 8px', borderRadius: '4px',
+          border: '0.5px solid rgba(124,92,191,0.3)',
+          background: 'rgba(124,92,191,0.08)',
+          color: 'var(--arc-bright)', fontSize: '10px'
+        }}>⌘K</kbd>
+        <span>MISSION CONTROL</span>
+      </div>
     </div>
   );
 
@@ -247,20 +276,31 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
           overscrollBehavior: 'contain',
           touchAction: 'pan-y',
           WebkitOverflowScrolling: 'touch',
-          padding: '24px 0',
+          padding: '32px 10%',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '20px',
           minHeight: 0,
-          backgroundImage:
-            'linear-gradient(rgba(168,85,247,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.015) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
+          backgroundImage: `
+            linear-gradient(rgba(124,92,191,0.018) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(124,92,191,0.018) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
           backgroundAttachment: 'local',
         }}
       >
         {messages.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '12px', fontFamily: 'var(--font-mono)', marginTop: '60px', letterSpacing: '0.08em' }}>
-            CHANNEL OPEN · AWAITING INPUT
+          <div style={{
+            textAlign: 'center',
+            marginTop: '80px',
+            fontFamily: 'var(--font-ui)',
+            fontSize: '10px',
+            color: 'var(--text-3)',
+            letterSpacing: '0.15em',
+            lineHeight: '2.5'
+          }}>
+            ◦ CHANNEL OPEN ◦<br/>
+            AWAITING INPUT
           </div>
         )}
         {messages.map((msg, i) => (
@@ -275,13 +315,16 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
       </div>
 
       {/* Input bar */}
-      <div style={{ padding: '16px 20px', borderTop: '0.5px solid rgba(168,85,247,0.1)' }}>
-        <div className="input-space" style={{
+      <div style={{
+        padding: '16px 10%',
+        borderTop: '0.5px solid rgba(124,92,191,0.12)',
+        background: 'rgba(3,6,16,0.7)',
+        backdropFilter: 'blur(16px)',
+        flexShrink: 0
+      }}>
+        <div className="input-field" style={{
           display: 'flex', alignItems: 'flex-end', gap: '12px',
-          background: 'rgba(255,255,255,0.03)',
-          border: '0.5px solid rgba(168,85,247,0.2)',
-          borderRadius: '16px', padding: '12px 16px',
-          transition: 'all 0.2s'
+          borderRadius: '16px', padding: '12px 16px'
         }}>
           <textarea
             ref={textareaRef}
@@ -291,33 +334,42 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
             rows={1}
             placeholder="Transmit your message..."
             style={{
-              flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              color: '#e6eef8', fontSize: '14px', resize: 'none', overflow: 'hidden',
-              fontFamily: 'var(--font-inter)', lineHeight: '1.5',
-              caretColor: '#a855f7'
+              flex: 1, background: 'transparent', border: 'none',
+              outline: 'none', color: 'var(--text-1)', fontSize: '13px',
+              resize: 'none', overflow: 'hidden',
+              fontFamily: 'var(--font-mono)', lineHeight: '1.6',
+              caretColor: 'var(--arc-bright)',
+              letterSpacing: '0.02em'
             }}
           />
-          <button onClick={sendMessage} disabled={!input.trim() || loading} style={{
-            width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
-            background: (!input.trim() || loading) ? 'rgba(168,85,247,0.2)' : 'linear-gradient(135deg,#3b82f6,#a855f7)',
-            border: 'none', cursor: (!input.trim() || loading) ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: (!input.trim() || loading) ? 'none' : '0 0 16px rgba(168,85,247,0.5)',
-            transition: 'all 0.2s'
-          }}>
-            <svg width="15" height="15" fill="none" stroke="white" viewBox="0 0 24 24">
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || loading}
+            style={{
+              width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
+              background: (!input.trim() || loading)
+                ? 'rgba(124,92,191,0.15)'
+                : 'linear-gradient(135deg, var(--arc), #6d28d9)',
+              border: 'none', cursor: (!input.trim() || loading) ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: (!input.trim() || loading)
+                ? 'none'
+                : '0 0 16px rgba(124,92,191,0.5)',
+              transition: 'all 0.2s'
+            }}
+          >
+            <svg width="14" height="14" fill="none" stroke="white" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </button>
         </div>
 
-        {/* Status bar */}
         <div style={{
           display: 'flex', justifyContent: 'center', gap: '16px',
-          marginTop: '8px', fontSize: '10px',
-          color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em'
+          marginTop: '8px', fontFamily: 'var(--font-ui)',
+          fontSize: '9px', color: 'var(--text-3)', letterSpacing: '0.1em'
         }}>
-          <span style={{ color: '#22c55e' }}>● CONNECTED</span>
+          <span style={{ color: 'var(--green-ok)' }}>● CONNECTED</span>
           <span>GROQ · LLAMA-3.3-70B</span>
           <span>ENTER TO SEND · SHIFT+ENTER FOR NEWLINE</span>
         </div>

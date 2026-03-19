@@ -35,10 +35,9 @@ export default function Signup() {
           <div className="inline-flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg,#3b82f6,#a855f7)', boxShadow: '0 0 24px rgba(168,85,247,0.5)' }}>
-              <span className="text-white font-bold text-lg font-orbitron">D</span>
+              <span className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-display)' }}>D</span>
             </div>
-            <span className="text-3xl font-orbitron font-semibold text-glow-purple"
-              style={{ color: '#e6eef8', letterSpacing: '0.05em' }}>
+            <span className="text-3xl font-semibold text-glow-purple" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-1)', letterSpacing: '0.05em' }}>
               DIALOGIX
             </span>
           </div>
@@ -53,7 +52,7 @@ export default function Signup() {
 
             {['username','email','password','confirmPassword'].map(field => (
               <div key={field}>
-                <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'var(--font-orbitron)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'var(--font-ui)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                   className="block mb-2">
                   {field === 'confirmPassword' ? 'confirm password' : field}
                 </label>
@@ -93,7 +92,7 @@ export default function Signup() {
               width: '100%',
               background: loading ? 'rgba(168,85,247,0.3)' : 'linear-gradient(135deg,#3b82f6,#a855f7)',
               border: 'none', borderRadius: '12px', padding: '13px',
-              color: 'white', fontSize: '13px', fontFamily: 'var(--font-orbitron)',
+              color: 'white', fontSize: '13px', fontFamily: 'var(--font-display)',
               letterSpacing: '0.1em', cursor: loading ? 'not-allowed' : 'pointer',
               boxShadow: loading ? 'none' : '0 0 20px rgba(168,85,247,0.4)',
               transition: 'all 0.2s'

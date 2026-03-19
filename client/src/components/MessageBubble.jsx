@@ -26,7 +26,7 @@ export default function MessageBubble({ message, username, isLatest }) {
         display: 'flex',
         alignItems: 'flex-end',
         gap: '10px',
-        padding: '0 20px',
+        padding: '0',
         flexDirection: isUser ? 'row-reverse' : 'row',
       }}
     >
@@ -34,13 +34,13 @@ export default function MessageBubble({ message, username, isLatest }) {
       <div style={{
         width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-orbitron)',
+        fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-display)',
         background: isUser
-          ? 'linear-gradient(135deg,#3b82f6,#06b6d4)'
-          : 'linear-gradient(135deg,#a855f7,#6366f1)',
+          ? 'linear-gradient(135deg, rgba(37,99,235,0.85), rgba(8,145,178,0.85))'
+          : 'linear-gradient(135deg, var(--arc), var(--arc-bright))',
         boxShadow: isUser
-          ? '0 0 12px rgba(59,130,246,0.5)'
-          : '0 0 12px rgba(168,85,247,0.5)',
+          ? '0 0 12px rgba(56,189,248,0.5)'
+          : '0 0 12px rgba(124,92,191,0.5)',
         color: 'white'
       }}>
         {isUser ? (username?.[0]?.toUpperCase() || 'U') : 'S'}
@@ -48,24 +48,16 @@ export default function MessageBubble({ message, username, isLatest }) {
 
       {/* Bubble */}
       <div style={{ maxWidth: '68%', minWidth: '80px' }}>
-        <div style={{
-          padding: '12px 16px',
-          borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-          fontSize: '14px', lineHeight: '1.65',
-          fontFamily: 'var(--font-inter)',
-          wordBreak: 'break-word',
-          ...(isUser ? {
-            background: 'linear-gradient(135deg, #2563eb, #0891b2)',
-            color: 'white',
-            boxShadow: '0 0 24px rgba(59,130,246,0.4), 0 4px 16px rgba(0,0,0,0.4)'
-          } : {
-            background: 'rgba(15, 10, 40, 0.9)',
-            border: '0.5px solid rgba(168,85,247,0.5)',
-            color: '#e6eef8',
-            backdropFilter: 'blur(12px)',
-            boxShadow: '0 0 0 0.5px rgba(168,85,247,0.3), 0 0 24px rgba(168,85,247,0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
-          })
-        }}>
+        <div
+          className={isUser ? 'bubble-user' : 'bubble-bot'}
+          style={{
+            padding: '12px 16px',
+            borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+            fontSize: '14px', lineHeight: '1.65',
+            fontFamily: 'var(--font-mono)',
+            wordBreak: 'break-word',
+            color: isUser ? 'white' : 'var(--text-1)',
+          }}>
           {isUser ? (
             <span>{message.text}</span>
           ) : (
@@ -73,14 +65,14 @@ export default function MessageBubble({ message, username, isLatest }) {
               <ReactMarkdown
                 components={{
                   p:      ({children}) => <p style={{ margin: '0 0 8px' }}>{children}</p>,
-                  strong: ({children}) => <strong style={{ fontWeight: 600, color: '#c4b5fd' }}>{children}</strong>,
+                  strong: ({children}) => <strong style={{ fontWeight: 600, color: 'var(--arc-bright)' }}>{children}</strong>,
                   ol:     ({children}) => <ol style={{ paddingLeft: '20px', margin: '8px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>{children}</ol>,
                   ul:     ({children}) => <ul style={{ paddingLeft: '20px', margin: '8px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>{children}</ul>,
-                  li:     ({children}) => <li style={{ color: '#d4d4e8' }}>{children}</li>,
+                  li:     ({children}) => <li style={{ color: 'var(--text-1)' }}>{children}</li>,
                   code:   ({inline, children}) => inline
-                    ? <code style={{ background: 'rgba(0,0,0,0.4)', color: '#06b6d4', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>{children}</code>
-                    : <pre style={{ background: 'rgba(0,0,0,0.5)', border: '0.5px solid rgba(168,85,247,0.2)', borderRadius: '8px', padding: '12px', overflowX: 'auto', margin: '8px 0' }}>
-                        <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#a5f3fc' }}>{children}</code>
+                    ? <code style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--pulse)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>{children}</code>
+                    : <pre style={{ background: 'rgba(0,0,0,0.5)', border: '0.5px solid rgba(124,92,191,0.2)', borderRadius: '8px', padding: '12px', overflowX: 'auto', margin: '8px 0' }}>
+                        <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--pulse)' }}>{children}</code>
                       </pre>
                 }}
               >
@@ -92,7 +84,7 @@ export default function MessageBubble({ message, username, isLatest }) {
                 <span style={{
                   display: 'inline-block',
                   width: '2px', height: '14px',
-                  background: '#a855f7',
+                  background: 'var(--arc)',
                   marginLeft: '2px',
                   verticalAlign: 'middle',
                   animation: 'cursor-blink 0.7s ease-in-out infinite'

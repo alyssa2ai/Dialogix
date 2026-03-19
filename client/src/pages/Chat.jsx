@@ -2,46 +2,16 @@ import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
-import AICore from '../components/AICore';
-import PersonaHUD from '../components/PersonaHUD';
 import RobotHead from '../components/RobotHead';
 import CommandPalette from '../components/CommandPalette';
-import { useSound } from '../hooks/useSound';
-
-function HUDCorners({ color = 'rgba(168,85,247,0.3)' }) {
-  const corners = [
-    { top: 8, left: 8, borderWidth: '1px 0 0 1px' },
-    { top: 8, right: 8, borderWidth: '1px 1px 0 0' },
-    { bottom: 8, left: 8, borderWidth: '0 0 1px 1px' },
-    { bottom: 8, right: 8, borderWidth: '0 1px 1px 0' },
-  ];
-
-  return (
-    <>
-      {corners.map((s, i) => (
-        <div
-          key={i}
-          style={{
-            position: 'absolute',
-            width: '14px',
-            height: '14px',
-            borderStyle: 'solid',
-            borderColor: color,
-            ...s,
-          }}
-        />
-      ))}
-    </>
-  );
-}
+import Starfield from '../components/Starfield';
 
 export default function Chat() {
-  const [sessions, setSessions] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
-  const [isThinking, setIsThinking] = useState(false);
-  const [isTransmitting, setIsTransmitting] = useState(false);
+  const [sessions, setSessions]               = useState([]);
+  const [activeChatId, setActiveChatId]       = useState(null);
+  const [isThinking, setIsThinking]           = useState(false);
+  const [isTransmitting, setIsTransmitting]   = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { playNewChat, unlockAudio } = useSound();
 
   useEffect(() => {
     const load = async () => {
@@ -62,8 +32,7 @@ export default function Chat() {
     const res = await api.post('/chat/sessions');
     setSessions(prev => [res.data, ...prev]);
     setActiveChatId(res.data._id);
-    unlockAudio();
-    playNewChat();
+    window.TARS?.onGreeting?.();
   };
 
   const handleDeleteChat = async (id) => {
@@ -73,144 +42,112 @@ export default function Chat() {
     setActiveChatId(updated.length > 0 ? updated[0]._id : null);
   };
 
-  const handleRenameChat = (id, newTitle) => {
-    setSessions(prev => prev.map(s => s._id === id ? {...s, title: newTitle} : s));
-  };
-
-  const handleTitleUpdate = (id, newTitle) => {
-    setSessions(prev => prev.map(s => s._id === id ? {...s, title: newTitle} : s));
-  };
-
-  const handleSendPrompt = (text) => {
-    window.__DIALOGIX_SEND_PROMPT__?.(text);
-  };
-
-  const handleClearChat = () => {
-    setActiveChatId(null);
-  };
-
-  const activeTitle = sessions.find((s) => s._id === activeChatId)?.title || '';
+  const handleRenameChat  = (id, t) => setSessions(p => p.map(s => s._id === id ? {...s, title: t} : s));
+  const handleTitleUpdate = (id, t) => setSessions(p => p.map(s => s._id === id ? {...s, title: t} : s));
+  const handleSendPrompt  = (text) => window.__DIALOGIX_SEND_PROMPT__?.(text);
+  const handleClearChat   = () => setActiveChatId(null);
 
   return (
-    <div style={{
+    <div className="scanline" style={{
       height: '100vh', display: 'flex', overflow: 'hidden',
-      position: 'relative', zIndex: 1
+      position: 'relative', background: 'var(--void)'
     }}>
+      {/* Layers */}
+      <Starfield/>
+      <div className="nebula-bg"/>
+      <div className="horizon"/>
 
+      {/* ── LEFT PANEL — TARS + Sessions ── */}
       <div style={{
-        width: sidebarCollapsed ? '0px' : '260px',
-        minWidth: sidebarCollapsed ? '0px' : '260px',
-        overflow: 'hidden',
-        transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1), min-width 0.3s cubic-bezier(0.4,0,0.2,1)',
+        width: sidebarCollapsed ? '56px' : '280px',
+        minWidth: sidebarCollapsed ? '56px' : '280px',
+        height: '100vh',
+        display: 'flex', flexDirection: 'column',
+        transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1), min-width 0.35s cubic-bezier(0.4,0,0.2,1)',
+        position: 'relative', zIndex: 10,
+        background: 'rgba(3,6,16,0.92)',
+        borderRight: '0.5px solid rgba(124,92,191,0.2)',
         flexShrink: 0,
-        position: 'relative',
-        zIndex: 10,
-      }}>
-        <Sidebar
-          sessions={sessions}
-          activeChatId={activeChatId}
-          onSelectChat={setActiveChatId}
-          onNewChat={handleNewChat}
-          onDeleteChat={handleDeleteChat}
-          onRenameChat={handleRenameChat}
-        />
-      </div>
-
-      <button
-        onClick={() => setSidebarCollapsed((p) => !p)}
-        style={{
-          position: 'absolute',
-          left: sidebarCollapsed ? '8px' : '248px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 20,
-          width: '20px',
-          height: '48px',
-          background: 'rgba(7,16,42,0.95)',
-          border: '0.5px solid rgba(168,85,247,0.3)',
-          borderRadius: '0 8px 8px 0',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'rgba(168,85,247,0.7)',
-          fontSize: '10px',
-          transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1), color 0.2s',
-          boxShadow: '2px 0 12px rgba(168,85,247,0.1)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = '#a855f7';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'rgba(168,85,247,0.7)';
-        }}
-      >
-        {sidebarCollapsed ? '>' : '<'}
-      </button>
-
-      {/* Right side */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-        minHeight: 0,
-        overflow: 'hidden',
-        background: 'rgba(2,6,23,0.85)',
+        overflow: 'hidden'
       }}>
 
-        {/* AI core panel */}
-        <div className="core-zone" style={{
-          height: '160px',
-          flexShrink: 0,
-          borderBottom: '0.5px solid rgba(168,85,247,0.15)',
-          background: 'rgba(7,12,35,0.7)',
-          position: 'relative',
+        {/* TARS viewport — top section */}
+        <div style={{
+          height: '280px', flexShrink: 0, position: 'relative',
+          borderBottom: '0.5px solid rgba(124,92,191,0.15)',
           overflow: 'hidden',
+          background: 'rgba(4,8,20,0.6)'
         }}>
-          {/* Radial glow behind core */}
+          {/* Radial glow behind TARS */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'radial-gradient(ellipse 50% 90% at 50% 50%, rgba(168,85,247,0.07), transparent)',
+            background: 'radial-gradient(ellipse 80% 80% at 50% 60%, rgba(124,92,191,0.12), transparent)',
             pointerEvents: 'none'
           }}/>
 
-          <AICore isThinking={isThinking} isTransmitting={isTransmitting} />
-          <PersonaHUD isThinking={isThinking} isTransmitting={isTransmitting} />
-
-          {/* HUD corners */}
-          <HUDCorners />
-
-          {/* Active session title */}
-          {activeTitle && (
+          {sidebarCollapsed ? (
+            /* Collapsed — just a glowing dot */
             <div style={{
-              position: 'absolute',
-              top: '12px',
-              left: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
+              height: '100%', display: 'flex', alignItems: 'center',
+              justifyContent: 'center'
             }}>
               <div style={{
-                width: '4px',
-                height: '4px',
-                borderRadius: '50%',
-                background: '#a855f7',
-                boxShadow: '0 0 6px #a855f7',
+                width: '8px', height: '8px', borderRadius: '50%',
+                background: 'var(--arc-bright)',
+                boxShadow: '0 0 12px var(--arc-bright)',
+                animation: 'pulse-ring 2s ease-in-out infinite'
               }}/>
-              <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '10px',
-                color: 'rgba(168,85,247,0.7)',
-                letterSpacing: '0.1em',
-              }}>
-                {activeTitle.toUpperCase().slice(0, 35)}
-              </span>
+            </div>
+          ) : (
+            /* Expanded — full TARS canvas */
+            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+              <RobotHead
+                isThinking={isThinking}
+                isTransmitting={isTransmitting}
+                embedded={true}
+              />
             </div>
           )}
         </div>
 
-        {/* Chat window */}
+        {/* Sessions — below TARS */}
+        {!sidebarCollapsed && (
+          <Sidebar
+            sessions={sessions}
+            activeChatId={activeChatId}
+            onSelectChat={setActiveChatId}
+            onNewChat={handleNewChat}
+            onDeleteChat={handleDeleteChat}
+            onRenameChat={handleRenameChat}
+            embedded={true}
+          />
+        )}
+
+        {/* Collapse button — bottom of panel */}
+        <button
+          onClick={() => setSidebarCollapsed(p => !p)}
+          style={{
+            position: 'absolute', bottom: '20px',
+            left: sidebarCollapsed ? '14px' : '20px',
+            width: '28px', height: '28px', borderRadius: '8px',
+            background: 'rgba(124,92,191,0.1)',
+            border: '0.5px solid rgba(124,92,191,0.3)',
+            cursor: 'pointer', color: 'var(--arc-bright)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '12px', transition: 'all 0.2s', zIndex: 5
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,92,191,0.2)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(124,92,191,0.3)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(124,92,191,0.1)'; e.currentTarget.style.boxShadow = 'none'; }}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
+      </div>
+
+      {/* ── RIGHT — Full bleed chat over cosmos ── */}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        minWidth: 0, minHeight: 0, position: 'relative', zIndex: 1
+      }}>
         <ChatWindow
           chatId={activeChatId}
           onTitleUpdate={handleTitleUpdate}
@@ -219,9 +156,7 @@ export default function Chat() {
         />
       </div>
 
-      {/* Robot head — fixed position, always visible */}
-      <RobotHead isThinking={isThinking} isTransmitting={isTransmitting} />
-
+      {/* ── Command palette ── */}
       <CommandPalette
         onNewChat={handleNewChat}
         onClearChat={handleClearChat}

@@ -324,7 +324,7 @@ function TARSBody({
   );
 }
 
-export default function RobotHead({ isThinking, isTransmitting }) {
+export default function RobotHead({ isThinking, isTransmitting, embedded }) {
   const mouse = useMouse();
   const [hovered, setHovered] = useState(false);
   const [showPersona, setShowPersona] = useState(false);
@@ -588,7 +588,16 @@ export default function RobotHead({ isThinking, isTransmitting }) {
           setHovered(false);
           handleHoverEnd();
         }}
-        style={{
+        style={embedded ? {
+          // Embedded in left panel — fills parent
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          cursor: 'pointer',
+          filter: `drop-shadow(0 0 ${hovered ? 32 : 16}px rgba(124,92,191,${hovered ? 0.7 : 0.4}))`,
+          transition: 'filter 0.4s'
+        } : {
+          // Fixed corner position
           width: '160px',
           height: '200px',
           cursor: 'pointer',
@@ -597,8 +606,8 @@ export default function RobotHead({ isThinking, isTransmitting }) {
         }}
       >
         <Canvas
-          camera={{ position: [0, 0, 3.6], fov: 38 }}
-          style={{ background: 'transparent' }}
+          camera={{ position: [0, 0, embedded ? 4.2 : 3.6], fov: embedded ? 45 : 38 }}
+          style={{ background: 'transparent', width: '100%', height: '100%' }}
           gl={{ alpha: true, antialias: true }}
         >
           <ambientLight intensity={0.15} />
