@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSound } from '../hooks/useSound';
 
 const BOOT_LINES = [
   { text: 'DIALOGIX DEEP SPACE OPERATING SYSTEM v4.2.1', delay: 0, color: '#e6eef8', speed: 18 },
@@ -80,32 +79,49 @@ export default function BootSequence({ onComplete }) {
   const [progress, setProgress] = useState(0);
   const containerRef = useRef(null);
   const timeoutsRef = useRef([]);
-  const { playBoot, unlockAudio } = useSound();
 
   useEffect(() => {
-    // Reset state for strict mode double-effect safety.
-    setVisibleLines([]);
-    setCurrentLine(0);
-    setFadeOut(false);
-    setProgress(0);
-
-    // Attempt unlock here as an extra safety net for browsers that resuspend audio.
-    try {
-      unlockAudio();
-    } catch (_) {
-      // Ignore unlock errors; boot visual should continue.
-    }
-
-    // Audio context is already unlocked from login click; just play.
-    const bootSoundTimer = setTimeout(() => {
+    // Play boot sound using fresh AudioContext.
+    const playBootSound = () => {
       try {
-        unlockAudio();
-        playBoot();
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        const ctx = new AudioCtx();
+
+        const tone = (freq, start, dur, vol = 0.035, type = 'sawtooth') => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filt = ctx.createBiquadFilter();
+          filt.type = 'lowpass';
+          filt.frequency.value = 600;
+          osc.connect(filt);
+          filt.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+          gain.gain.setValueAtTime(0, ctx.currentTime + start);
+          gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + start + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+          osc.start(ctx.currentTime + start);
+          osc.stop(ctx.currentTime + start + dur + 0.1);
+        };
+
+        tone(50, 0.0, 1.0, 0.04);
+        tone(70, 0.3, 0.9, 0.035);
+        tone(100, 0.7, 0.7, 0.03);
+        tone(150, 1.1, 0.6, 0.03);
+        tone(220, 1.5, 0.5, 0.025, 'sine');
+        tone(330, 1.9, 0.4, 0.025, 'sine');
+        tone(440, 2.2, 0.3, 0.02, 'sine');
+        tone(660, 2.4, 0.25, 0.02, 'sine');
       } catch (e) {
-        console.warn('[BootSequence] playBoot failed', e);
+        console.warn('Boot sound error:', e);
       }
-    }, 180);
-    timeoutsRef.current.push(bootSoundTimer);
+    };
+
+    const soundTimer = setTimeout(playBootSound, 150);
+    timeoutsRef.current.push(soundTimer);
 
     BOOT_LINES.forEach((line, i) => {
       const lineTimer = setTimeout(() => {

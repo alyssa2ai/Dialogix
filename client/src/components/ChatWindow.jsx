@@ -295,9 +295,7 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
       >
         <div style={{
           width: '100%',
-          maxWidth: '780px',
-          margin: '0 auto',
-          padding: '32px 24px',
+          padding: '32px 16px',
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',

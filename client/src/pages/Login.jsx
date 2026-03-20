@@ -15,17 +15,21 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    // Unlock AudioContext during user gesture.
+    // Unlock audio during this user gesture.
     try {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (Ctx) {
-        const ctx = new Ctx();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const buf = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
         await ctx.resume();
-        window.__AUDIO_CTX__ = ctx;
+        await ctx.close();
+        sessionStorage.setItem('audio_unlocked', 'true');
       }
-    } catch (audioErr) {
-      console.warn('[Login] audio unlock failed', audioErr);
-    }
+    } catch (_) {}
 
     try {
       const res = await api.post('/auth/login', form);
