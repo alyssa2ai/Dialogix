@@ -209,3 +209,13 @@ body {
 
 /* ── Session hover actions ── */
 div:hover .session-actions { opacity: 1 !important; }
+
+/* -- Mobile breakpoints -- */
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: flex !important; }
+}
+
+@media (min-width: 769px) {
+  .mobile-only { display: none !important; }
+}

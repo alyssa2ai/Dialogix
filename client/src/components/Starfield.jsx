@@ -57,7 +57,7 @@ export default function Starfield() {
       // Gargantua black hole - right center of screen
       const cx = W * 0.72;
       const cy = H * 0.48;
-      const R = Math.min(W, H) * 0.16;
+      const R = Math.min(W, H) * (W <= 768 ? 0.12 : 0.16);
 
       // Outer gravitational lens glow
       const lensGrad = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.2);

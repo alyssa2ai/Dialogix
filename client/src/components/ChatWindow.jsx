@@ -295,7 +295,7 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
       >
         <div style={{
           width: '100%',
-          padding: '32px 16px',
+          padding: window.innerWidth <= 768 ? '16px 12px' : '32px 16px',
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',
@@ -329,7 +329,7 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
 
       {/* Input bar */}
       <div style={{
-        padding: '16px 8%',
+        padding: window.innerWidth <= 768 ? '12px 16px' : '16px 8%',
         borderTop: '0.5px solid rgba(124,92,191,0.15)',
         background: 'rgba(2,4,14,0.7)',
         backdropFilter: 'blur(20px)',

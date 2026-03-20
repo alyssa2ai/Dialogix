@@ -48,7 +48,10 @@ export default function MessageBubble({ message, username, isLatest }) {
       </div>
 
       {/* Bubble */}
-      <div style={{ maxWidth: '46%', minWidth: '60px' }}>
+      <div style={{
+        maxWidth: window.innerWidth <= 768 ? '85%' : '46%',
+        minWidth: '60px'
+      }}>
         <div
           className={isUser ? 'bubble-user' : 'bubble-bot'}
           style={{
