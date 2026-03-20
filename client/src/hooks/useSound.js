@@ -144,41 +144,43 @@ export function useSound() {
 
   // Boot up power hum
   const playBoot = () => {
-    runWithCtx((ctx) => {
-      const now = ctx.currentTime;
-      const low = ctx.createOscillator();
-      const mid = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
+    try {
+      // Create a fresh context each time for boot.
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-      low.type = 'sine';
-      low.frequency.setValueAtTime(42, now);
-      low.frequency.exponentialRampToValueAtTime(86, now + 2.1);
+      const playTone = (freq, startTime, duration, volume = 0.04) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
-      mid.type = 'triangle';
-      mid.frequency.setValueAtTime(84, now);
-      mid.frequency.exponentialRampToValueAtTime(168, now + 2.3);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
 
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(220, now);
-      filter.frequency.linearRampToValueAtTime(980, now + 2.8);
-      filter.Q.setValueAtTime(0.8, now);
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
 
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.04, now + 0.5);
-      gain.gain.linearRampToValueAtTime(0.07, now + 1.6);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 3.6);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
 
-      low.connect(filter);
-      mid.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+        gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + startTime + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
 
-      low.start(now);
-      mid.start(now);
-      low.stop(now + 3.6);
-      mid.stop(now + 3.6);
-    });
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration);
+      };
+
+      // Boot sequence - rising tones.
+      playTone(60, 0.0, 1.5, 0.03);
+      playTone(80, 0.5, 1.2, 0.025);
+      playTone(120, 1.0, 1.0, 0.02);
+      playTone(180, 1.5, 0.8, 0.025);
+      playTone(240, 2.0, 0.6, 0.03);
+      playTone(320, 2.5, 0.4, 0.02);
+    } catch (e) {
+      console.warn('Boot sound failed:', e);
+    }
   };
 
   // Error / warning blip

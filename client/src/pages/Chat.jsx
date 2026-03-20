@@ -5,6 +5,7 @@ import ChatWindow from '../components/ChatWindow';
 import RobotHead from '../components/RobotHead';
 import TARSStats from '../components/TARSStats';
 import CommandPalette from '../components/CommandPalette';
+import { useSound } from '../hooks/useSound';
 
 export default function Chat() {
   const [sessions, setSessions]               = useState([]);
@@ -12,6 +13,7 @@ export default function Chat() {
   const [isThinking, setIsThinking]           = useState(false);
   const [isTransmitting, setIsTransmitting]   = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { playNewChat } = useSound();
 
   useEffect(() => {
     const load = async () => {
@@ -33,6 +35,7 @@ export default function Chat() {
     setSessions(prev => [res.data, ...prev]);
     setActiveChatId(res.data._id);
     window.TARS?.onGreeting?.();
+    playNewChat();
   };
 
   const handleDeleteChat = async (id) => {

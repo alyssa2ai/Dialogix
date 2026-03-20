@@ -80,7 +80,7 @@ export default function BootSequence({ onComplete }) {
   const [progress, setProgress] = useState(0);
   const containerRef = useRef(null);
   const timeoutsRef = useRef([]);
-  const { playBoot, unlockAudio } = useSound();
+  const { playBoot } = useSound();
 
   useEffect(() => {
     // Reset state for strict mode double-effect safety.
@@ -89,25 +89,15 @@ export default function BootSequence({ onComplete }) {
     setFadeOut(false);
     setProgress(0);
 
-    const unlock = async () => {
+    // Play boot sound - works because user just clicked login.
+    const bootSoundTimer = setTimeout(() => {
       try {
-        unlockAudio();
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        const ctx = new AC();
-        const buf = ctx.createBuffer(1, 1, 22050);
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(ctx.destination);
-        src.start(0);
-        await ctx.resume();
-        setTimeout(() => playBoot(), 400);
+        playBoot();
       } catch (e) {
-        console.warn('[BootSequence] Audio unlock blocked', e);
+        console.warn('[BootSequence] playBoot failed', e);
       }
-    };
-
-    void unlock();
+    }, 200);
+    timeoutsRef.current.push(bootSoundTimer);
 
     BOOT_LINES.forEach((line, i) => {
       const lineTimer = setTimeout(() => {
