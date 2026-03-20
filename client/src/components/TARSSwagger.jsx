@@ -150,90 +150,70 @@ export default function TARSSwagger({ onComplete }) {
   const { config } = usePersona();
   const [phase, setPhase] = useState('walkin');
   const [posX, setPosX] = useState(-15);
+  const [posY, setPosY] = useState(50);
   const [visible, setVisible] = useState(true);
   const [quote, setQuote] = useState('');
   const [showQ, setShowQ] = useState(false);
-  const rafRef = useRef(null);
-  const startRef = useRef(null);
-
-  // Smooth position animation using RAF.
-  const animateTo = (from, to, duration, onDone) => {
-    startRef.current = Date.now();
-    const tick = () => {
-      const elapsed = Date.now() - startRef.current;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased =
-        progress < 0.5
-          ? 2 * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-      setPosX(from + (to - from) * eased);
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        onDone?.();
-      }
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  };
-
   useEffect(() => {
-    // Full sequence.
     let t1;
     let t2;
     let t3;
     let t4;
     let t5;
-    let t6;
-    let t7;
+    let rafId;
+    const startTime = Date.now();
+    const duration = 8000;
 
-    // 1. Walk in from left.
-    setPhase('walkin');
-    animateTo(-15, 48, 2000, () => {
-      // 2. Arrive center - show quote.
-      t1 = setTimeout(() => {
-        setPhase('idle');
-        setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-        setShowQ(true);
-      }, 100);
+    // Sinusoidal path across screen.
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = elapsed / duration;
 
-      // 3. Spin.
-      t2 = setTimeout(() => {
-        setPhase('spin');
-        setShowQ(false);
-      }, 1400);
+      if (progress >= 1) {
+        setVisible(false);
+        setTimeout(onComplete, 400);
+        return;
+      }
 
-      // 4. Bow.
-      t3 = setTimeout(() => {
-        setPhase('bow');
-        setQuote('Your mission awaits.');
-        setShowQ(true);
-      }, 2800);
+      // X goes from -15% to 115% (left to right, off screen).
+      const x = -15 + progress * 130;
 
-      // 5. Strut right.
-      t4 = setTimeout(() => {
-        setPhase('strut');
-        setShowQ(false);
-        animateTo(48, 85, 2200, () => {
-          // 6. Walk out.
-          t5 = setTimeout(() => {
-            setPhase('walkout');
-            animateTo(85, 115, 700, () => {
-              // 7. Done.
-              t6 = setTimeout(() => {
-                setVisible(false);
-                t7 = setTimeout(onComplete, 400);
-              }, 100);
-            });
-          }, 100);
-        });
-      }, 4200);
-    });
+      // Y oscillates between 25% and 75% of the viewport.
+      const y = 50 + Math.sin(progress * Math.PI * 3) * 25;
+
+      setPosX(x);
+      setPosY(y);
+
+      rafId = requestAnimationFrame(animate);
+    };
+
+    setPhase('walk');
+    rafId = requestAnimationFrame(animate);
+
+    t1 = setTimeout(() => {
+      setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+      setShowQ(true);
+    }, 1500);
+    t2 = setTimeout(() => {
+      setShowQ(false);
+    }, 3000);
+    t3 = setTimeout(() => {
+      setPhase('spin');
+    }, 3500);
+    t4 = setTimeout(() => {
+      setPhase('strut');
+      setQuote('Your mission awaits.');
+      setShowQ(true);
+    }, 5000);
+    t5 = setTimeout(() => {
+      setShowQ(false);
+    }, 7000);
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
-      [t1, t2, t3, t4, t5, t6, t7].forEach((id) => clearTimeout(id));
+      cancelAnimationFrame(rafId);
+      [t1, t2, t3, t4, t5].forEach(clearTimeout);
     };
-  }, [onComplete]);
+  }, []);
 
   if (!visible) return null;
 
@@ -246,17 +226,6 @@ export default function TARSSwagger({ onComplete }) {
         pointerEvents: 'none',
       }}
     >
-      {/* TEMPORARY TEST - red border to confirm mounting */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: '4px',
-          border: '2px solid red',
-          borderRadius: '8px',
-          pointerEvents: 'none',
-        }}
-      />
-
       {/* Subtle overlay */}
       <div
         style={{
@@ -267,29 +236,17 @@ export default function TARSSwagger({ onComplete }) {
         }}
       />
 
-      {/* Glowing floor line */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: 0,
-          right: 0,
-          height: '1px',
-          background: `linear-gradient(90deg, transparent, ${config.color}60, transparent)`,
-          boxShadow: `0 0 8px ${config.color}40`,
-        }}
-      />
-
       {/* TARS */}
       <div
         style={{
           position: 'absolute',
           left: `${posX}vw`,
-          top: '50%',
-          transform: 'translate(-50%, -55%)',
+          top: `${posY}vh`,
+          transform: 'translate(-50%, -50%)',
           width: '200px',
           height: '280px',
           filter: `drop-shadow(0 0 28px ${config.color}90)`,
+          transition: 'none',
         }}
       >
         <Canvas
