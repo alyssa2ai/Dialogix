@@ -3,6 +3,7 @@ import api from '../api/axios';
 import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import RobotHead from '../components/RobotHead';
+import TARSStats from '../components/TARSStats';
 import CommandPalette from '../components/CommandPalette';
 
 export default function Chat() {
@@ -184,6 +185,8 @@ export default function Chat() {
             </div>
           )}
         </div>
+
+        {!sidebarCollapsed && <TARSStats />}
 
         {/* Sessions — below TARS */}
         {!sidebarCollapsed && (

@@ -7,49 +7,33 @@ import {
   TARS_SHAKE_QUOTES,
   TARS_SPIN_QUOTES,
   TARS_KONAMI_QUOTES,
+  TARS_RARE_QUOTES,
+  TARS_TIME_QUOTES,
   TARS_TYPING_QUOTES,
+  TARS_KEYWORD_REACTIONS,
 } from '../data/tarsQuotes';
 
-const KONAMI = [
-  'ArrowUp',
-  'ArrowUp',
-  'ArrowDown',
-  'ArrowDown',
-  'ArrowLeft',
-  'ArrowRight',
-  'ArrowLeft',
-  'ArrowRight',
-];
-
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight'];
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-export function useTARSState() {
+const inject = (text, name) => {
+  const normalized = String(name || '').trim();
+  const display = normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : 'astronaut';
+  return String(text || '').replace(/\{name\}/g, display);
+};
+
+export function useTARSState(username) {
   const [emotion, setEmotion] = useState('greeting');
   const [quote, setQuote] = useState('');
   const [showQuote, setShowQuote] = useState(false);
   const [spinCount, setSpinCount] = useState(0);
   const [missionTime, setMissionTime] = useState('');
   const [showClock, setShowClock] = useState(false);
+
   const hoverTimerRef = useRef(null);
   const quoteTimerRef = useRef(null);
   const idleTimerRef = useRef(null);
   const konamiRef = useRef([]);
-
-  useEffect(() => {
-    const update = () => {
-      const now = new Date();
-      const year = 2157;
-      const day = String(
-        Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000)
-      ).padStart(3, '0');
-      const time = now.toTimeString().slice(0, 8);
-      setMissionTime(`${year}.${day}.${time}`);
-    };
-
-    update();
-    const id = setInterval(update, 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const showMessage = useCallback((newEmotion, text, duration = 4000) => {
     if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current);
@@ -65,36 +49,68 @@ export function useTARSState() {
   }, []);
 
   useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const year = 2157;
+      const day = String(Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000)).padStart(3, '0');
+      const time = now.toTimeString().slice(0, 8);
+      setMissionTime(`${year}.${day}.${time}`);
+    };
+
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
     const boot = setTimeout(() => {
-      showMessage('greeting', pick(TARS_GREET_QUOTES), 3500);
-    }, 1200);
+      const hour = new Date().getHours();
+      const timeSet = hour < 12 ? TARS_TIME_QUOTES.morning : hour < 17 ? TARS_TIME_QUOTES.afternoon : TARS_TIME_QUOTES.night;
+      showMessage('greeting', inject(pick(timeSet), username), 4500);
+    }, 1400);
 
     return () => clearTimeout(boot);
-  }, [showMessage]);
+  }, [showMessage, username]);
+
+  useEffect(() => {
+    const onceKey = `tars-name-whispered-${String(username || '').toLowerCase() || 'guest'}`;
+    if (!username || sessionStorage.getItem(onceKey)) return;
+
+    const whisper = setTimeout(() => {
+      showMessage('greeting', `${inject('{name}', username)}... whisper channel secured. Welcome aboard.`, 3400);
+      sessionStorage.setItem(onceKey, '1');
+    }, 2900);
+
+    return () => clearTimeout(whisper);
+  }, [username, showMessage]);
 
   useEffect(() => {
     idleTimerRef.current = setInterval(() => {
       if (emotion === 'idle' || emotion === 'greeting') {
-        showMessage('idle', pick(TARS_QUOTES), 4000);
+        const useRare = Math.random() < 0.25;
+        const raw = useRare ? pick(TARS_RARE_QUOTES) : pick(TARS_QUOTES);
+        showMessage('idle', inject(raw, username), 4500);
       }
     }, 30000);
 
-    return () => clearInterval(idleTimerRef.current);
-  }, [emotion, showMessage]);
+    return () => {
+      if (idleTimerRef.current) clearInterval(idleTimerRef.current);
+    };
+  }, [emotion, showMessage, username]);
 
   useEffect(() => {
     const handler = (e) => {
       konamiRef.current = [...konamiRef.current, e.key].slice(-8);
       if (konamiRef.current.join(',') === KONAMI.join(',')) {
         setSpinCount((c) => c + 3);
-        showMessage('konami', pick(TARS_KONAMI_QUOTES), 5000);
+        showMessage('konami', inject(pick(TARS_KONAMI_QUOTES), username), 5000);
         konamiRef.current = [];
       }
     };
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showMessage]);
+  }, [showMessage, username]);
 
   useEffect(() => {
     return () => {
@@ -105,18 +121,17 @@ export function useTARSState() {
   }, []);
 
   const handleClick = useCallback(() => {
-    showMessage('idle', pick(TARS_QUOTES), 4000);
-  }, [showMessage]);
+    const pool = Math.random() < 0.25 ? TARS_GREET_QUOTES : TARS_QUOTES;
+    showMessage('idle', inject(pick(pool), username), 4000);
+  }, [showMessage, username]);
 
   const handleDoubleClick = useCallback(() => {
     setSpinCount((c) => c + 1);
-    showMessage('spin', pick(TARS_SPIN_QUOTES), 3000);
-  }, [showMessage]);
+    showMessage('spin', inject(pick(TARS_SPIN_QUOTES), username), 3000);
+  }, [showMessage, username]);
 
   const handleHoverStart = useCallback(() => {
-    hoverTimerRef.current = setTimeout(() => {
-      setShowClock(true);
-    }, 2500);
+    hoverTimerRef.current = setTimeout(() => setShowClock(true), 2500);
   }, []);
 
   const handleHoverEnd = useCallback(() => {
@@ -130,30 +145,39 @@ export function useTARSState() {
   }, []);
 
   const handleTypingEnd = useCallback(() => {
-    if (!showQuote) {
-      setEmotion('idle');
-    }
+    if (!showQuote) setEmotion('idle');
   }, [showQuote]);
 
   const handleEmptySubmit = useCallback(() => {
-    showMessage('shake', pick(TARS_SHAKE_QUOTES), 2500);
-  }, [showMessage]);
+    showMessage('shake', inject(pick(TARS_SHAKE_QUOTES), username), 2500);
+  }, [showMessage, username]);
 
   const handleMessageReceived = useCallback(
     (messageLength) => {
       if (messageLength > 400) {
-        showMessage('celebrate', pick(TARS_CELEBRATE_QUOTES), 3500);
-        return;
+        showMessage('celebrate', inject(pick(TARS_CELEBRATE_QUOTES), username), 3500);
       }
-
-      showMessage('typing', pick(TARS_TYPING_QUOTES), 1400);
     },
-    [showMessage]
+    [showMessage, username]
   );
 
   const handleError = useCallback(() => {
-    showMessage('confused', pick(TARS_CONFUSED_QUOTES), 3000);
-  }, [showMessage]);
+    showMessage('confused', inject(pick(TARS_CONFUSED_QUOTES), username), 3000);
+  }, [showMessage, username]);
+
+  const handleKeywordCheck = useCallback(
+    (text) => {
+      const lower = String(text || '').toLowerCase();
+      for (const [keyword, reaction] of Object.entries(TARS_KEYWORD_REACTIONS)) {
+        if (lower.includes(keyword)) {
+          if (reaction.emotion === 'spin') setSpinCount((c) => c + 1);
+          showMessage(reaction.emotion, inject(reaction.quote, username), 4000);
+          return;
+        }
+      }
+    },
+    [showMessage, username]
+  );
 
   return {
     emotion,
@@ -171,5 +195,6 @@ export function useTARSState() {
     handleEmptySubmit,
     handleMessageReceived,
     handleError,
+    handleKeywordCheck,
   };
 }

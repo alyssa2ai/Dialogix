@@ -4,8 +4,10 @@ import { Float, RoundedBox, MeshDistortMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 import { PERSONA_CONFIGS } from '../data/tarsQuotes';
 import { usePersona } from '../context/PersonaContext';
+import { useAuth } from '../context/AuthContext';
 import { useSound } from '../hooks/useSound';
 import { useTARSState } from '../hooks/useTARSState';
+import { useTARSVoice } from '../hooks/useTARSVoice';
 
 function useMouse() {
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
@@ -28,6 +30,7 @@ function GargantuaCore({ isThinking, isTransmitting, isCelebrating, personaColor
   const disk1Ref = useRef();
   const disk2Ref = useRef();
   const disk3Ref = useRef();
+  const lensRef = useRef();
   const coreRef = useRef();
   const glowRef = useRef();
 
@@ -40,6 +43,10 @@ function GargantuaCore({ isThinking, isTransmitting, isCelebrating, personaColor
     if (disk3Ref.current) {
       disk3Ref.current.rotation.z += 0.003 * speed;
       disk3Ref.current.rotation.x = Math.sin(t * 0.3) * 0.4;
+    }
+    if (lensRef.current) {
+      lensRef.current.rotation.z -= 0.0025 * speed;
+      lensRef.current.rotation.y = Math.sin(t * 0.25) * 0.35;
     }
 
     if (coreRef.current) {
@@ -102,6 +109,11 @@ function GargantuaCore({ isThinking, isTransmitting, isCelebrating, personaColor
         <meshBasicMaterial color="#818cf8" transparent opacity={0.2} side={THREE.DoubleSide} />
       </mesh>
 
+      <mesh ref={lensRef} rotation={[Math.PI * 0.26, 0.42, 0]}>
+        <torusGeometry args={[0.57, 0.018, 16, 100]} />
+        <meshBasicMaterial color={personaColor} transparent opacity={0.16} />
+      </mesh>
+
       <pointLight
         color={personaColor}
         intensity={isCelebrating ? 6 : isThinking ? 4 : 1.5}
@@ -112,12 +124,15 @@ function GargantuaCore({ isThinking, isTransmitting, isCelebrating, personaColor
   );
 }
 
-function TARSPanel({ position, rotation, openAngle, slitColor, isBlinking }) {
+function TARSPanel({ position, rotation, openAngle, slitColor, isBlinking, panelIndex }) {
   const panelRef = useRef();
   const slitRef = useRef();
+  const rimRef = useRef();
   const currentAngle = useRef(0);
 
-  useFrame(() => {
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+
     currentAngle.current += (openAngle - currentAngle.current) * 0.04;
     if (panelRef.current) {
       panelRef.current.rotation.y = currentAngle.current;
@@ -125,8 +140,12 @@ function TARSPanel({ position, rotation, openAngle, slitColor, isBlinking }) {
     }
 
     if (slitRef.current) {
-      const targetY = isBlinking ? 0.1 : 1.0;
-      slitRef.current.scale.y += (targetY - slitRef.current.scale.y) * 0.2;
+      const targetY = isBlinking ? 0.08 : 1.0;
+      slitRef.current.scale.y += (targetY - slitRef.current.scale.y) * 0.25;
+    }
+
+    if (rimRef.current) {
+      rimRef.current.material.opacity = 0.4 + 0.3 * Math.sin(t * 2 + panelIndex);
     }
   });
 
@@ -134,30 +153,53 @@ function TARSPanel({ position, rotation, openAngle, slitColor, isBlinking }) {
     <group ref={panelRef} position={position} rotation={rotation}>
       <RoundedBox args={[0.22, 1.4, 0.18]} radius={0.03} smoothness={4}>
         <meshStandardMaterial
-          color="#0a1020"
-          emissive="#0c1a3a"
-          emissiveIntensity={0.6}
-          roughness={0.1}
-          metalness={0.95}
+          color="#080e1e"
+          emissive="#0a1230"
+          emissiveIntensity={0.5}
+          roughness={0.05}
+          metalness={0.98}
         />
       </RoundedBox>
 
-      {[-0.4, -0.15, 0.1, 0.35].map((y, i) => (
+      {[-0.5, -0.3, -0.1, 0.1, 0.3, 0.5].map((y, i) => (
         <mesh key={i} position={[0, y, 0.092]}>
-          <boxGeometry args={[0.18, 0.008, 0.01]} />
-          <meshBasicMaterial color={slitColor} transparent opacity={0.25} />
+          <boxGeometry args={[i % 2 === 0 ? 0.14 : 0.1, 0.004, 0.005]} />
+          <meshBasicMaterial color={slitColor} transparent opacity={0.15} />
         </mesh>
       ))}
 
-      <mesh ref={slitRef} position={[0, 0.08, 0.092]}>
-        <boxGeometry args={[0.16, 0.018, 0.01]} />
-        <meshStandardMaterial color={slitColor} emissive={slitColor} emissiveIntensity={3} />
+      <mesh position={[0.05, 0, 0.092]}>
+        <boxGeometry args={[0.004, 1.2, 0.005]} />
+        <meshBasicMaterial color={slitColor} transparent opacity={0.1} />
       </mesh>
 
-      <mesh position={[0.108, 0, 0]}>
-        <boxGeometry args={[0.005, 1.3, 0.01]} />
-        <meshBasicMaterial color={slitColor} transparent opacity={0.4} />
+      <mesh ref={slitRef} position={[0, 0.1, 0.093]}>
+        <boxGeometry args={[0.15, 0.022, 0.008]} />
+        <meshStandardMaterial
+          color={slitColor}
+          emissive={slitColor}
+          emissiveIntensity={4}
+          roughness={0}
+          metalness={1}
+        />
       </mesh>
+
+      <mesh position={[0, -0.05, 0.092]}>
+        <boxGeometry args={[0.08, 0.008, 0.005]} />
+        <meshStandardMaterial color={slitColor} emissive={slitColor} emissiveIntensity={2} />
+      </mesh>
+
+      <mesh ref={rimRef} position={[0.108, 0, 0]}>
+        <boxGeometry args={[0.006, 1.3, 0.008]} />
+        <meshBasicMaterial color={slitColor} transparent opacity={0.5} />
+      </mesh>
+
+      {[[-0.08, 0.62], [0.08, 0.62], [-0.08, -0.62], [0.08, -0.62]].map(([x, y], i) => (
+        <mesh key={i} position={[x, y, 0.092]}>
+          <circleGeometry args={[0.012, 8]} />
+          <meshBasicMaterial color={slitColor} transparent opacity={0.6} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -174,8 +216,8 @@ function TARSBody({
   slitColor,
 }) {
   const bodyRef = useRef();
-  const currentRot = useRef({ x: 0, y: 0 });
-  const targetRot = useRef({ x: 0, y: 0 });
+  const currentRot = useRef({ x: 0, y: 0, z: 0 });
+  const targetRot = useRef({ x: 0, y: 0, z: 0 });
   const spinRef = useRef(0);
   const lastSpin = useRef(0);
   const [isBlinking, setIsBlinking] = useState(false);
@@ -202,8 +244,20 @@ function TARSBody({
   }, []);
 
   const panelOpen = ['thinking', 'celebrate', 'spin', 'konami', 'greeting'].includes(emotion);
-  const panelOpenL = panelOpen ? 0.9 : 0.0;
-  const panelOpenR = panelOpen ? -0.9 : 0.0;
+
+  const panelAngles = {
+    thinking: { L: 0.7, R: -0.7 },
+    celebrate: { L: 1.1, R: -1.1 },
+    greeting: { L: 0.5, R: -0.5 },
+    spin: { L: 1.2, R: -1.2 },
+    konami: { L: 1.4, R: -1.4 },
+    confused: { L: 0.3, R: -0.1 },
+    shake: { L: 0.1, R: -0.1 },
+    typing: { L: 0.45, R: -0.45 },
+    idle: { L: 0.0, R: 0.0 },
+  };
+
+  const angles = panelAngles[emotion] || { L: 0, R: 0 };
 
   useFrame(() => {
     if (spinCount > lastSpin.current) {
@@ -218,6 +272,7 @@ function TARSBody({
     }
 
     const hoverMult = hovered ? 1.5 : 1.0;
+    targetRot.current.z = 0;
 
     switch (emotion) {
       case 'thinking':
@@ -242,20 +297,23 @@ function TARSBody({
         targetRot.current.x = 0.25;
         break;
       case 'confused':
-        targetRot.current.x = Math.sin(Date.now() * 0.005) * 0.15;
-        targetRot.current.y = Math.cos(Date.now() * 0.004) * 0.2;
+        targetRot.current.x = 0.1;
+        targetRot.current.y = -0.35;
+        targetRot.current.z = 0.15;
         break;
       default:
         targetRot.current.y = mouse.x * 0.6 * hoverMult;
         targetRot.current.x = -mouse.y * 0.35 * hoverMult;
     }
 
-    currentRot.current.x += (targetRot.current.x - currentRot.current.x) * 0.04;
-    currentRot.current.y += (targetRot.current.y - currentRot.current.y) * 0.04;
+    currentRot.current.x += (targetRot.current.x - currentRot.current.x) * 0.045;
+    currentRot.current.y += (targetRot.current.y - currentRot.current.y) * 0.045;
+    currentRot.current.z += (targetRot.current.z - currentRot.current.z) * 0.045;
 
     if (bodyRef.current) {
       bodyRef.current.rotation.x = currentRot.current.x;
       bodyRef.current.rotation.y = currentRot.current.y;
+      bodyRef.current.rotation.z = currentRot.current.z;
     }
   });
 
@@ -266,20 +324,22 @@ function TARSBody({
       <TARSPanel
         position={[-0.26, 0, 0]}
         rotation={[0, 0, 0]}
-        openAngle={panelOpenL}
+        openAngle={angles.L}
         slitColor={slitColor}
         isBlinking={isBlinking}
+        panelIndex={0}
       />
 
       <TARSPanel
         position={[0.26, 0, 0]}
         rotation={[0, Math.PI, 0]}
-        openAngle={panelOpenR}
+        openAngle={angles.R}
         slitColor={slitColor}
         isBlinking={isBlinking}
+        panelIndex={1}
       />
 
-      <group scale={panelOpen ? 0.82 : 0.68}>
+      <group scale={panelOpen ? 0.85 : 0.68}>
         <GargantuaCore
           isThinking={isThinking}
           isTransmitting={isTransmitting}
@@ -289,34 +349,70 @@ function TARSBody({
         />
       </group>
 
-      {[0.72, -0.72].map((y, i) => (
-        <mesh key={i} position={[0, y, 0]}>
-          <boxGeometry args={[0.56, 0.06, 0.16]} />
+      <group position={[0, 0.74, 0]}>
+        <mesh>
+          <boxGeometry args={[0.58, 0.055, 0.16]} />
           <meshStandardMaterial
-            color="#070e1a"
-            emissive="#0c1a3a"
-            emissiveIntensity={0.5}
-            roughness={0.1}
-            metalness={0.95}
+            color="#060c1a"
+            emissive={personaColor}
+            emissiveIntensity={0.3}
+            roughness={0.05}
+            metalness={0.98}
           />
         </mesh>
-      ))}
+        {[-0.18, 0, 0.18].map((x, i) => (
+          <mesh key={i} position={[x, 0, 0.082]}>
+            <boxGeometry args={[0.04, 0.03, 0.01]} />
+            <meshBasicMaterial color={slitColor} transparent opacity={0.4} />
+          </mesh>
+        ))}
+      </group>
 
-      <group position={[0, 0.82, 0]}>
+      <mesh position={[0, -0.74, 0]}>
+        <boxGeometry args={[0.58, 0.055, 0.16]} />
+        <meshStandardMaterial
+          color="#060c1a"
+          emissive={personaColor}
+          emissiveIntensity={0.3}
+          roughness={0.05}
+          metalness={0.98}
+        />
+      </mesh>
+
+      <group position={[0.12, 0.84, 0]}>
         <mesh>
-          <cylinderGeometry args={[0.012, 0.012, 0.22, 8]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.2} />
+          <cylinderGeometry args={[0.01, 0.015, 0.28, 8]} />
+          <meshStandardMaterial color="#0f1a30" metalness={0.98} roughness={0.05} />
         </mesh>
-        <mesh position={[0, 0.14, 0]}>
-          <sphereGeometry args={[0.038, 12, 12]} />
-          <meshStandardMaterial color={slitColor} emissive={slitColor} emissiveIntensity={4} />
+        <mesh position={[0, 0.16, 0]}>
+          <sphereGeometry args={[0.036, 14, 14]} />
+          <meshStandardMaterial color={slitColor} emissive={slitColor} emissiveIntensity={isCelebrating ? 6 : 4} />
+        </mesh>
+      </group>
+
+      <group position={[-0.08, 0.78, 0]}>
+        <mesh>
+          <cylinderGeometry args={[0.006, 0.008, 0.16, 6]} />
+          <meshStandardMaterial color="#0f1a30" metalness={0.98} roughness={0.05} />
+        </mesh>
+        <mesh position={[0, 0.1, 0]}>
+          <sphereGeometry args={[0.022, 10, 10]} />
+          <meshStandardMaterial color={personaColor} emissive={personaColor} emissiveIntensity={3} />
         </mesh>
       </group>
 
       <pointLight
-        position={[0, 0, 0.5]}
+        position={[0, 0.1, 0.8]}
         color={personaColor}
-        intensity={isCelebrating ? 3 : isThinking ? 2 : 1}
+        intensity={isCelebrating ? 3.5 : isThinking ? 2.5 : 1.2}
+        distance={2.5}
+        decay={2}
+      />
+
+      <pointLight
+        position={[0, -1, 0.5]}
+        color={diskColor}
+        intensity={0.4}
         distance={2}
         decay={2}
       />
@@ -328,8 +424,11 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
   const mouse = useMouse();
   const [hovered, setHovered] = useState(false);
   const [showPersona, setShowPersona] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const { persona, setPersona, config } = usePersona();
+  const { user } = useAuth();
   const { playNewChat, playSend } = useSound();
+  const { speak, stop } = useTARSVoice();
 
   const {
     emotion,
@@ -347,7 +446,8 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
     handleEmptySubmit,
     handleMessageReceived,
     handleError,
-  } = useTARSState();
+    handleKeywordCheck,
+  } = useTARSState(user?.username);
 
   useEffect(() => {
     window.TARS = {
@@ -356,6 +456,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
       onEmptySubmit: handleEmptySubmit,
       onMessageReceived: handleMessageReceived,
       onError: handleError,
+      onKeywordCheck: handleKeywordCheck,
     };
 
     return () => {
@@ -367,7 +468,18 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
     handleEmptySubmit,
     handleMessageReceived,
     handleError,
+    handleKeywordCheck,
   ]);
+
+  useEffect(() => {
+    if (showQuote && quote && voiceEnabled) {
+      speak(quote);
+    }
+
+    if (!showQuote) {
+      stop();
+    }
+  }, [showQuote, quote, voiceEnabled, speak, stop]);
 
   const handlePersonaChange = (key) => {
     setPersona(key);
@@ -714,26 +826,50 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
           TARS
         </div>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowPersona((p) => !p);
-          }}
-          style={{
-            background: 'none',
-            border: `0.5px solid ${config.color}40`,
-            borderRadius: '6px',
-            padding: '3px 8px',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '8px',
-            color: config.color,
-            letterSpacing: '0.08em',
-            transition: 'all 0.2s',
-          }}
-        >
-          {config.label.split(' ')[0]}
-        </button>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setVoiceEnabled((v) => !v);
+            }}
+            title={voiceEnabled ? 'Mute TARS' : 'Unmute TARS'}
+            style={{
+              background: 'none',
+              border: `0.5px solid ${voiceEnabled ? `${config.color}60` : 'rgba(255,255,255,0.1)'}`,
+              borderRadius: '6px',
+              padding: '3px 6px',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-ui)',
+              fontSize: '8px',
+              color: voiceEnabled ? config.color : 'var(--text-3)',
+              letterSpacing: '0.08em',
+              transition: 'all 0.2s',
+            }}
+          >
+            {voiceEnabled ? 'VOICE' : 'MUTE'}
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPersona((p) => !p);
+            }}
+            style={{
+              background: 'none',
+              border: `0.5px solid ${config.color}40`,
+              borderRadius: '6px',
+              padding: '3px 8px',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '8px',
+              color: config.color,
+              letterSpacing: '0.08em',
+              transition: 'all 0.2s',
+            }}
+          >
+            {config.label.split(' ')[0]}
+          </button>
+        </div>
       </div>
       )}
     </div>

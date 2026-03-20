@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import api from '../api/axios';
 import MessageBubble from './MessageBubble';
 import ThinkingStages from './ThinkingStages';
+import ContextChips from './ContextChips';
 import { useAuth } from '../context/AuthContext';
 import { useSound } from '../hooks/useSound';
 import { usePersona } from '../context/PersonaContext';
@@ -85,6 +86,7 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
     onTransmittingChange?.(false);
     unlockAudio();
     playSend();
+    window.TARS?.onKeywordCheck?.(text);
 
     setMessages(prev => [...prev, { sender: 'user', text, timestamp: new Date() }]);
 
@@ -328,6 +330,11 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
         flexShrink: 0,
         boxShadow: 'inset 0 1px 0 rgba(124,92,191,0.1)'
       }}>
+        <ContextChips
+          onChipClick={(prompt) => sendMessageWithText(prompt)}
+          disabled={loading}
+        />
+
         <div className="input-field" style={{
           display: 'flex', alignItems: 'flex-end', gap: '12px',
           borderRadius: '16px', padding: '12px 16px'
