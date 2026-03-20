@@ -231,14 +231,16 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
       minHeight: 0,
       position: 'relative',
       zIndex: 1,
-      background: 'rgba(2,6,23,0.85)',
+      background: 'transparent',
     }}>
 
       <div style={{
-        padding: '12px 20px',
-        borderBottom: '0.5px solid rgba(168,85,247,0.1)',
+        padding: '12px 24px',
+        borderBottom: '0.5px solid rgba(124,92,191,0.15)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexShrink: 0
+        flexShrink: 0,
+        background: 'rgba(2,4,14,0.35)',
+        backdropFilter: 'blur(8px)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
@@ -268,59 +270,63 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
         style={{
           flex: '1 1 0',
           height: 0,
-          background:
-            'radial-gradient(circle at 15% 20%, rgba(168,85,247,0.09), transparent 45%), radial-gradient(circle at 85% 80%, rgba(59,130,246,0.08), transparent 40%), rgba(8,11,21,0.92)',
+          background: 'transparent',
           overflowY: 'auto',
           overflowX: 'hidden',
           scrollBehavior: 'smooth',
           overscrollBehavior: 'contain',
           touchAction: 'pan-y',
           WebkitOverflowScrolling: 'touch',
-          padding: '32px 10%',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+          backgroundImage: 'none',
+        }}
+      >
+        <div style={{
+          width: '100%',
+          maxWidth: '780px',
+          margin: '0 auto',
+          padding: '32px 24px',
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',
-          minHeight: 0,
-          backgroundImage: `
-            linear-gradient(rgba(124,92,191,0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(124,92,191,0.035) 1px, transparent 1px)
-          `,
-          backgroundSize: '52px 52px',
-          backgroundAttachment: 'local',
-        }}
-      >
-        {messages.length === 0 && (
-          <div style={{
-            textAlign: 'center',
-            marginTop: '80px',
-            fontFamily: 'var(--font-ui)',
-            fontSize: '10px',
-            color: 'var(--text-3)',
-            letterSpacing: '0.15em',
-            lineHeight: '2.5'
-          }}>
-            ◦ CHANNEL OPEN ◦<br/>
-            AWAITING INPUT
-          </div>
-        )}
-        {messages.map((msg, i) => (
-          <MessageBubble
-            key={i}
-            message={msg}
-            username={user?.username}
-            isLatest={i === messages.length - 1}
-          />
-        ))}
-        {isTyping && <ThinkingStages />}
+          flex: 1
+        }}>
+          {messages.length === 0 && (
+            <div style={{
+              textAlign: 'center',
+              marginTop: '80px',
+              fontFamily: 'var(--font-ui)',
+              fontSize: '10px',
+              color: 'var(--text-3)',
+              letterSpacing: '0.15em',
+              lineHeight: '2.5'
+            }}>
+              ◦ CHANNEL OPEN ◦<br/>
+              AWAITING INPUT
+            </div>
+          )}
+          {messages.map((msg, i) => (
+            <MessageBubble
+              key={i}
+              message={msg}
+              username={user?.username}
+              isLatest={i === messages.length - 1}
+            />
+          ))}
+          {isTyping && <ThinkingStages />}
+        </div>
       </div>
 
       {/* Input bar */}
       <div style={{
-        padding: '16px 10%',
-        borderTop: '0.5px solid rgba(124,92,191,0.12)',
-        background: 'rgba(3,6,16,0.7)',
-        backdropFilter: 'blur(16px)',
-        flexShrink: 0
+        padding: '16px 8%',
+        borderTop: '0.5px solid rgba(124,92,191,0.15)',
+        background: 'rgba(2,4,14,0.7)',
+        backdropFilter: 'blur(20px)',
+        flexShrink: 0,
+        boxShadow: 'inset 0 1px 0 rgba(124,92,191,0.1)'
       }}>
         <div className="input-field" style={{
           display: 'flex', alignItems: 'flex-end', gap: '12px',

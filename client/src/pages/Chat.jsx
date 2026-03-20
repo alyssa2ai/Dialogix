@@ -4,7 +4,6 @@ import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import RobotHead from '../components/RobotHead';
 import CommandPalette from '../components/CommandPalette';
-import Starfield from '../components/Starfield';
 
 export default function Chat() {
   const [sessions, setSessions]               = useState([]);
@@ -50,22 +49,18 @@ export default function Chat() {
   return (
     <div className="scanline" style={{
       height: '100vh', display: 'flex', overflow: 'hidden',
-      position: 'relative', background: 'var(--void)'
+      position: 'relative', zIndex: 1, background: 'transparent'
     }}>
-      {/* Layers */}
-      <Starfield/>
-      <div className="nebula-bg"/>
-      <div className="horizon"/>
-
       {/* ── LEFT PANEL — TARS + Sessions ── */}
       <div style={{
         width: sidebarCollapsed ? '56px' : '280px',
         minWidth: sidebarCollapsed ? '56px' : '280px',
         height: '100vh',
+        minHeight: 0,
         display: 'flex', flexDirection: 'column',
         transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1), min-width 0.35s cubic-bezier(0.4,0,0.2,1)',
         position: 'relative', zIndex: 10,
-        background: 'rgba(3,6,16,0.92)',
+        background: 'rgba(2,4,14,0.88)',
         borderRight: '0.5px solid rgba(124,92,191,0.2)',
         flexShrink: 0,
         overflow: 'hidden'
@@ -122,20 +117,61 @@ export default function Chat() {
 
         {/* TARS viewport — top section */}
         <div style={{
-          height: sidebarCollapsed ? '0' : '260px',
+          height: sidebarCollapsed ? '0' : '280px',
           flexShrink: 0,
           position: 'relative',
-          borderBottom: '0.5px solid rgba(124,92,191,0.15)',
+          borderBottom: '0.5px solid rgba(124,92,191,0.2)',
           overflow: 'hidden',
-          background: 'rgba(4,8,20,0.7)',
+          background: 'rgba(4,8,20,0.8)',
           transition: 'height 0.35s ease'
         }}>
           {/* Radial glow behind TARS */}
           <div style={{
-            position: 'absolute', inset: 0,
-            background: 'radial-gradient(ellipse 80% 80% at 50% 50%, rgba(124,92,191,0.1), transparent)',
-            pointerEvents: 'none'
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background: 'radial-gradient(ellipse 100% 100% at 50% 60%, rgba(124,92,191,0.18) 0%, rgba(56,189,248,0.05) 50%, transparent 75%)',
           }}/>
+
+          {[
+            { top: 8, left: 8, borderWidth: '1px 0 0 1px' },
+            { top: 8, right: 8, borderWidth: '1px 1px 0 0' },
+            { bottom: 8, left: 8, borderWidth: '0 0 1px 1px' },
+            { bottom: 8, right: 8, borderWidth: '0 1px 1px 0' },
+          ].map((s, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                width: '12px',
+                height: '12px',
+                borderStyle: 'solid',
+                borderColor: 'rgba(124,92,191,0.4)',
+                pointerEvents: 'none',
+                zIndex: 2,
+                ...s,
+              }}
+            />
+          ))}
+
+          <div style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            zIndex: 2,
+            pointerEvents: 'none'
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: '8px',
+              color: 'rgba(124,92,191,0.5)',
+              letterSpacing: '0.25em'
+            }}>
+              T · A · R · S
+            </span>
+          </div>
 
           {!sidebarCollapsed && (
             /* Expanded — full TARS canvas */
@@ -182,10 +218,21 @@ export default function Chat() {
         </button>
       </div>
 
+      {/* Glowing divider */}
+      <div style={{
+        width: '1px',
+        flexShrink: 0,
+        background: 'linear-gradient(180deg, transparent 0%, rgba(124,92,191,0.6) 20%, rgba(56,189,248,0.4) 60%, transparent 100%)',
+        boxShadow: '0 0 8px rgba(124,92,191,0.4)',
+        zIndex: 5,
+      }} />
+
       {/* ── RIGHT — Full bleed chat over cosmos ── */}
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column',
-        minWidth: 0, minHeight: 0, position: 'relative', zIndex: 1
+        minWidth: 0, minHeight: 0,
+        position: 'relative', zIndex: 1,
+        background: 'transparent'
       }}>
         <ChatWindow
           chatId={activeChatId}

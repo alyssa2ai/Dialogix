@@ -47,16 +47,36 @@ export default function MessageBubble({ message, username, isLatest }) {
       </div>
 
       {/* Bubble */}
-      <div style={{ maxWidth: '72%', minWidth: '80px' }}>
+      <div style={{ maxWidth: isUser ? '52%' : '56%', minWidth: '60px' }}>
         <div
           className={isUser ? 'bubble-user' : 'bubble-bot'}
           style={{
-            padding: '12px 16px',
-            borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+            padding: isUser ? '12px 16px' : '14px 18px',
+            borderRadius: isUser ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
             fontSize: '14px', lineHeight: '1.65',
             fontFamily: 'var(--font-mono)',
             wordBreak: 'break-word',
-            color: isUser ? 'white' : 'var(--text-1)',
+            ...(isUser ? {
+              background: 'linear-gradient(135deg, #1d4ed8, #0891b2)',
+              border: '0.5px solid rgba(56,189,248,0.5)',
+              color: 'white',
+              boxShadow: `
+                0 0 0 0.5px rgba(56,189,248,0.25),
+                0 0 24px rgba(56,189,248,0.25),
+                0 8px 24px rgba(0,0,0,0.4)
+              `,
+            } : {
+              background: 'rgba(4,6,18,0.92)',
+              border: '0.5px solid rgba(124,92,191,0.7)',
+              color: '#dde3f0',
+              backdropFilter: 'blur(20px)',
+              boxShadow: `
+                0 0 0 0.5px rgba(124,92,191,0.3),
+                0 0 30px rgba(124,92,191,0.15),
+                0 8px 32px rgba(0,0,0,0.6),
+                inset 0 1px 0 rgba(255,255,255,0.08)
+              `,
+            }),
           }}>
           {isUser ? (
             <span>{message.text}</span>

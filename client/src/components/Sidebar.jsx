@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewChat, onDeleteChat, onRenameChat, embedded }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const sessionsRef = useRef(null);
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
   const [hoveredId, setHoveredId] = useState(null);
@@ -28,9 +29,42 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
   const todaySessions  = sessions.filter(s => new Date(s.updatedAt).toDateString() === today);
   const olderSessions  = sessions.filter(s => new Date(s.updatedAt).toDateString() !== today);
 
+  const renderSessionGroup = (list, label) => {
+    if (!list?.length) return null;
+
+    return (
+      <>
+        <div style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', color: 'var(--text-3)', padding: '10px 8px 6px', letterSpacing: '0.2em' }}>{label}</div>
+        {list.map(s => (
+          <SessionItem key={s._id} session={s} isActive={s._id === activeChatId}
+            isRenaming={renamingId === s._id} renameValue={renameValue}
+            setRenameValue={setRenameValue} onSelect={() => onSelectChat(s._id)}
+            onRename={() => startRename(s)} onRenameSubmit={() => submitRename(s._id)}
+            onDelete={() => onDeleteChat(s._id)}
+            isHovered={hoveredId === s._id}
+            onHover={setHoveredId}
+          />
+        ))}
+      </>
+    );
+  };
+
+  const handleSessionsWheel = (e) => {
+    const el = sessionsRef.current;
+    if (!el) return;
+
+    const canScroll = el.scrollHeight > el.clientHeight;
+    if (!canScroll) return;
+
+    // Force wheel deltas into this container so sidebar scroll works reliably.
+    e.preventDefault();
+    e.stopPropagation();
+    el.scrollTop += e.deltaY;
+  };
+
   return (
     <div className="sidebar-zone" style={{
-      height: '100%', flexShrink: 0,
+      flex: 1, minHeight: 0, flexShrink: 1,
       background: embedded ? 'transparent' : 'rgba(3, 7, 20, 0.98)',
       borderRight: embedded ? 'none' : '0.5px solid rgba(124,92,191,0.2)',
       backdropFilter: 'blur(20px)',
@@ -80,39 +114,23 @@ export default function Sidebar({ sessions, activeChatId, onSelectChat, onNewCha
       </div>
 
       {/* Sessions */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 8px' }}>
+      <div
+        ref={sessionsRef}
+        onWheel={handleSessionsWheel}
+        style={{
+        flex: 1,
+        minHeight: 0,
+        overflowY: 'auto',
+        padding: '0 8px 8px',
+        WebkitOverflowScrolling: 'touch',
+        scrollBehavior: 'smooth',
+        overscrollBehavior: 'contain',
+        touchAction: 'pan-y',
+        pointerEvents: 'auto'
+      }}>
 
-        {todaySessions.length > 0 && (
-          <>
-            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', color: 'var(--text-3)', padding: '10px 8px 6px', letterSpacing: '0.2em' }}>TODAY</div>
-            {todaySessions.map(s => (
-              <SessionItem key={s._id} session={s} isActive={s._id === activeChatId}
-                isRenaming={renamingId === s._id} renameValue={renameValue}
-                setRenameValue={setRenameValue} onSelect={() => onSelectChat(s._id)}
-                onRename={() => startRename(s)} onRenameSubmit={() => submitRename(s._id)}
-                onDelete={() => onDeleteChat(s._id)}
-                isHovered={hoveredId === s._id}
-                onHover={setHoveredId}
-              />
-            ))}
-          </>
-        )}
-
-        {olderSessions.length > 0 && (
-          <>
-            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', color: 'var(--text-3)', padding: '10px 8px 6px', letterSpacing: '0.2em' }}>PREVIOUS</div>
-            {olderSessions.map(s => (
-              <SessionItem key={s._id} session={s} isActive={s._id === activeChatId}
-                isRenaming={renamingId === s._id} renameValue={renameValue}
-                setRenameValue={setRenameValue} onSelect={() => onSelectChat(s._id)}
-                onRename={() => startRename(s)} onRenameSubmit={() => submitRename(s._id)}
-                onDelete={() => onDeleteChat(s._id)}
-                isHovered={hoveredId === s._id}
-                onHover={setHoveredId}
-              />
-            ))}
-          </>
-        )}
+        {renderSessionGroup(todaySessions, 'TODAY')}
+        {renderSessionGroup(olderSessions, 'PREVIOUS')}
 
         {sessions.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-dim)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>

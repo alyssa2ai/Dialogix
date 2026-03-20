@@ -27,7 +27,7 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ position: 'relative', zIndex: 1 }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ position: 'relative', zIndex: 1, background: 'transparent' }}>
       <div className="w-full max-w-md">
 
         {/* Logo */}

@@ -126,7 +126,7 @@ export default function BootSequence({ onComplete }) {
       position: 'fixed',
       inset: 0,
       zIndex: 9999,
-      background: '#020617',
+      background: '#010208',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',

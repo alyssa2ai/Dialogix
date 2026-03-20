@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+html {
+  background-color: #010208 !important;
+  height: 100%;
+}
+
 :root {
   --font-display: 'Exo 2', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
@@ -30,12 +35,32 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body, #root {
-  height: 100%; overflow: hidden;
-  background: var(--void);
+body {
+  background-color: #010208 !important;
+  height: 100%;
+  overflow: hidden;
   color: var(--text-1);
   font-family: var(--font-mono);
   -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100%;
+  background: transparent !important;
+}
+
+/* Vignette - darkens edges to focus center. */
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 85% 85% at 50% 50%,
+    transparent 40%,
+    rgba(1,2,8,0.4) 70%,
+    rgba(1,2,8,0.8) 100%
+  );
+  pointer-events: none;
 }
 
 /* ── Scrollbar ── */
@@ -47,18 +72,24 @@ html, body, #root {
 .nebula-bg {
   position: fixed; inset: 0; z-index: 0;
   background:
-    radial-gradient(ellipse 100% 70% at 70% 40%,
-      rgba(88,28,135,0.28) 0%,
-      rgba(45,20,90,0.18) 35%,
+    radial-gradient(ellipse 90% 80% at 72% 45%,
+      rgba(109,40,217,0.32) 0%,
+      rgba(88,28,135,0.2) 25%,
+      rgba(49,10,101,0.08) 50%,
+      transparent 70%),
+    radial-gradient(ellipse 45% 55% at 92% 65%,
+      rgba(6,182,212,0.14) 0%,
+      rgba(56,189,248,0.06) 40%,
       transparent 65%),
-    radial-gradient(ellipse 50% 45% at 75% 60%,
-      rgba(56,189,248,0.1) 0%,
-      transparent 50%),
-    radial-gradient(ellipse 70% 50% at 15% 85%,
-      rgba(124,92,191,0.14) 0%,
+    radial-gradient(ellipse 60% 45% at 8% 90%,
+      rgba(124,92,191,0.18) 0%,
       transparent 55%),
+    radial-gradient(ellipse 30% 30% at 68% 42%,
+      rgba(139,92,246,0.12) 0%,
+      transparent 50%),
     var(--deep);
   pointer-events: none;
+  animation: nebula-drift 18s ease-in-out infinite;
 }
 
 /* ── Noise grain overlay ── */
@@ -156,6 +187,12 @@ html, body, #root {
 @keyframes scan {
   0%   { transform: translateY(-100%); opacity: 0.6; }
   100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes nebula-drift {
+  0%, 100% { opacity: 1; transform: scale(1) translate(0, 0); }
+  33% { opacity: 0.85; transform: scale(1.02) translate(-8px, 4px); }
+  66% { opacity: 0.9; transform: scale(0.99) translate(5px, -3px); }
 }
 
 .signal-in { animation: signal-in 0.4s cubic-bezier(0.2,0.9,0.3,1) forwards; }

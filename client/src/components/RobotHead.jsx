@@ -618,7 +618,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
         }}
       >
         <Canvas
-          camera={{ position: [0, 0, embedded ? 4.2 : 3.6], fov: embedded ? 45 : 38 }}
+          camera={{ position: [0, 0, embedded ? 2.8 : 3.6], fov: embedded ? 52 : 38 }}
           style={{ background: 'transparent', width: '100%', height: '100%' }}
           gl={{ alpha: true, antialias: true }}
         >

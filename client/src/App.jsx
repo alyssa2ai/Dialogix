@@ -61,10 +61,9 @@ export default function App() {
     <AuthProvider>
       <PersonaProvider>
         <BrowserRouter>
-          <div className="scanlines">
-            <Starfield />
-            <AppRoutes />
-          </div>
+          <Starfield />
+          <div className="vignette" />
+          <AppRoutes />
         </BrowserRouter>
       </PersonaProvider>
     </AuthProvider>
