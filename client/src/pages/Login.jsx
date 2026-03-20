@@ -15,39 +15,10 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    // Play boot sound RIGHT NOW inside the gesture
-    try {
-      const A = window.AudioContext || window.webkitAudioContext;
-      const ctx = new A();
-      await ctx.resume();
-      ctx.onstatechange = () => {
-        if (ctx.state === 'suspended') ctx.resume();
-      };
-      const tones = [
-        [55, 0], [80, 0.25], [110, 0.5], [160, 0.75],
-        [220, 1.0], [320, 1.25], [440, 1.5], [660, 1.75]
-      ];
-      tones.forEach(([freq, start]) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.connect(g);
-        g.connect(ctx.destination);
-        o.type = 'sine';
-        o.frequency.value = freq;
-        g.gain.setValueAtTime(0, ctx.currentTime + start);
-        g.gain.linearRampToValueAtTime(0.07, ctx.currentTime + start + 0.06);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + 0.35);
-        o.start(ctx.currentTime + start);
-        o.stop(ctx.currentTime + start + 0.4);
-      });
-      // Store context so audio keeps playing after navigation
-      window.__BOOT_CTX__ = ctx;
-    } catch (_) {}
-
     try {
       const res = await api.post('/auth/login', form);
       login(res.data.user, res.data.token);
-      setTimeout(() => navigate('/chat'), 300);
+      navigate('/chat');
     } catch (err) {
       setError(err.response?.data?.message || 'Connection failed');
     } finally {

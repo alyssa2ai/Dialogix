@@ -78,30 +78,57 @@ export default function BootSequence({ onComplete }) {
   const [fadeOut, setFadeOut] = useState(false);
   const [progress, setProgress] = useState(0);
   const containerRef = useRef(null);
-  const timeoutsRef = useRef([]);
 
   useEffect(() => {
+    // -- Boot sound - self contained, no dependencies --
+    const playSound = () => {
+      try {
+        const A = window.AudioContext || window.webkitAudioContext;
+        if (!A) return;
+        const ctx = new A();
+        ctx.resume().then(() => {
+          [
+            [55, 0.0, 0.5],
+            [80, 0.4, 0.5],
+            [110, 0.8, 0.5],
+            [160, 1.2, 0.5],
+            [220, 1.6, 0.4],
+            [330, 2.0, 0.4],
+            [440, 2.3, 0.3],
+            [660, 2.6, 0.3],
+          ].forEach(([freq, start, dur]) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.type = 'sine';
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0, ctx.currentTime + start);
+            g.gain.linearRampToValueAtTime(0.07, ctx.currentTime + start + 0.06);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+            o.start(ctx.currentTime + start);
+            o.stop(ctx.currentTime + start + dur + 0.05);
+          });
+        });
+      } catch (_) {}
+    };
+
+    playSound();
+
+    // -- Boot lines --
     BOOT_LINES.forEach((line, i) => {
-      const lineTimer = setTimeout(() => {
-        setVisibleLines((prev) => (prev.includes(i) ? prev : [...prev, i]));
+      setTimeout(() => {
+        setVisibleLines((prev) => [...prev, i]);
         setCurrentLine(i);
         setProgress(Math.round((i / (BOOT_LINES.length - 1)) * 100));
       }, line.delay);
-      timeoutsRef.current.push(lineTimer);
     });
 
     const lastDelay = BOOT_LINES[BOOT_LINES.length - 1].delay;
-    const fadeTimer = setTimeout(() => {
+    setTimeout(() => {
       setFadeOut(true);
-      const doneTimer = setTimeout(onComplete, 900);
-      timeoutsRef.current.push(doneTimer);
+      setTimeout(onComplete, 900);
     }, lastDelay + 1200);
-    timeoutsRef.current.push(fadeTimer);
-
-    return () => {
-      timeoutsRef.current.forEach((t) => clearTimeout(t));
-      timeoutsRef.current = [];
-    };
   }, []);
 
   useEffect(() => {
