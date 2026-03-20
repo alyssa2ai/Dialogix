@@ -18,7 +18,9 @@ const allowedOrigins = [
   'http://127.0.0.1:5174',
   'http://127.0.0.1:5175',
   'http://127.0.0.1:5176',
-];
+  'https://dialogix-lake.vercel.app',
+  process.env.CLIENT_URL
+].filter(Boolean);
 
 // Socket.io setup
 const io = new Server(httpServer, {
