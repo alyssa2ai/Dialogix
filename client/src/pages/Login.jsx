@@ -15,6 +15,31 @@ export default function Login() {
     setLoading(true);
     setError('');
 
+    // Play boot sound RIGHT NOW inside the gesture
+    try {
+      const A   = window.AudioContext || window.webkitAudioContext;
+      const ctx = new A();
+      await ctx.resume();
+      const tones = [
+        [55,0],[80,0.25],[110,0.5],[160,0.75],
+        [220,1.0],[320,1.25],[440,1.5],[660,1.75]
+      ];
+      tones.forEach(([freq, start]) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0, ctx.currentTime + start);
+        g.gain.linearRampToValueAtTime(0.07, ctx.currentTime + start + 0.06);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + 0.35);
+        o.start(ctx.currentTime + start);
+        o.stop(ctx.currentTime + start + 0.4);
+      });
+      // Store context so audio keeps playing after navigation
+      window.__BOOT_CTX__ = ctx;
+    } catch(_) {}
+
     try {
       const res = await api.post('/auth/login', form);
       login(res.data.user, res.data.token);
@@ -45,7 +70,7 @@ export default function Login() {
         <div className="glass" style={{ borderRadius: '16px', padding: '32px', border: '0.5px solid rgba(124,92,191,0.25)' }}>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-            {['email', 'password'].map(field => (
+            {['email','password'].map(field => (
               <div key={field}>
                 <label style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', color: 'var(--text-3)', letterSpacing: '0.18em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
                   {field}
@@ -53,18 +78,12 @@ export default function Login() {
                 <input
                   type={field}
                   value={form[field]}
-                  onChange={e => setForm({ ...form, [field]: e.target.value })}
+                  onChange={e => setForm({...form, [field]: e.target.value})}
                   required
                   placeholder={field === 'email' ? 'you@cosmos.io' : '••••••••'}
                   style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(124,92,191,0.2)', borderRadius: '10px', padding: '12px 16px', color: 'var(--text-1)', fontSize: '14px', fontFamily: 'var(--font-mono)', outline: 'none', transition: 'border-color 0.2s, box-shadow 0.2s', boxSizing: 'border-box' }}
-                  onFocus={e => {
-                    e.target.style.borderColor = 'rgba(124,92,191,0.7)';
-                    e.target.style.boxShadow = '0 0 0 1px rgba(124,92,191,0.2)';
-                  }}
-                  onBlur={e => {
-                    e.target.style.borderColor = 'rgba(124,92,191,0.2)';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={e => { e.target.style.borderColor = 'rgba(124,92,191,0.7)'; e.target.style.boxShadow = '0 0 0 1px rgba(124,92,191,0.2)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'rgba(124,92,191,0.2)'; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             ))}

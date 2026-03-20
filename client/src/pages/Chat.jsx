@@ -38,30 +38,31 @@ export default function Chat() {
 
         const text = greetings[Math.floor(Math.random() * greetings.length)];
 
+        // Wait for voices to load - this is critical on some browsers
         const speak = () => {
           const voices = window.speechSynthesis.getVoices();
-          if (voices.length === 0) {
-            // Voices not loaded yet - wait for them
-            window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
-            return;
-          }
           const u = new SpeechSynthesisUtterance(text);
-          const voice =
-            voices.find((v) => v.name.includes('Google UK English Male')) ||
-            voices.find((v) => v.name.includes('Microsoft David')) ||
-            voices.find((v) => v.name.includes('Daniel')) ||
-            voices.find((v) => v.lang?.startsWith('en'));
+          const voice = voices.find(v => v.name.includes('Google UK English Male'))
+            || voices.find(v => v.name.includes('Microsoft David'))
+            || voices.find(v => v.name.includes('Daniel'))
+            || voices.find(v => v.lang?.startsWith('en'));
           if (voice) u.voice = voice;
-          u.rate = 0.82;
-          u.pitch = 0.58;
+          u.rate   = 0.82;
+          u.pitch  = 0.58;
           u.volume = 0.9;
           window.speechSynthesis.cancel();
           window.speechSynthesis.speak(u);
         };
 
-        speak();
+        // If voices already loaded - speak now
+        // If not - wait for voiceschanged event
+        if (window.speechSynthesis.getVoices().length > 0) {
+          speak();
+        } else {
+          window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
+        }
       } catch (_) {}
-    }, 3500);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, [user?.username]);
