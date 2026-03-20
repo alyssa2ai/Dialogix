@@ -246,6 +246,17 @@ export default function TARSSwagger({ onComplete }) {
         pointerEvents: 'none',
       }}
     >
+      {/* TEMPORARY TEST - red border to confirm mounting */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: '4px',
+          border: '2px solid red',
+          borderRadius: '8px',
+          pointerEvents: 'none',
+        }}
+      />
+
       {/* Subtle overlay */}
       <div
         style={{

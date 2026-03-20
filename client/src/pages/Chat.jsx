@@ -3,7 +3,6 @@ import api from '../api/axios';
 import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import RobotHead from '../components/RobotHead';
-import TARSStats from '../components/TARSStats';
 import CommandPalette from '../components/CommandPalette';
 import TARSSwagger from '../components/TARSSwagger';
 import { useSound } from '../hooks/useSound';
@@ -17,14 +16,6 @@ export default function Chat() {
   const [tarsVoice, setTarsVoice]             = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { playNewChat } = useSound();
-
-  useEffect(() => {
-    const handler = () => setShowSwagger(true);
-    window.addEventListener('tars:swagger', handler);
-    return () => {
-      window.removeEventListener('tars:swagger', handler);
-    };
-  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -291,8 +282,6 @@ export default function Chat() {
             </button>
           </div>
         )}
-
-        {!sidebarCollapsed && <TARSStats />}
 
         {/* Sessions — below TARS */}
         {!sidebarCollapsed && (
