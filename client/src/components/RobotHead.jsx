@@ -602,7 +602,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
     if (!showQuote) stop();
   }, [showQuote, stop]);
 
-  // Walking animation -- triggers after 40s of idle
+  // Walking animation -- triggers after 30s of idle
   useEffect(() => {
     const startWalk = () => {
       if (emotion !== 'idle' || isWalking) return;
@@ -624,7 +624,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
 
     walkTimerRef.current = setInterval(() => {
       if (emotion === 'idle' && !isWalking) startWalk();
-    }, 40000);
+    }, 30000);
 
     return () => {
       clearInterval(walkTimerRef.current);
