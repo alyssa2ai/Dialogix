@@ -4,7 +4,9 @@ export function useTARSVoice() {
   const [voices, setVoices] = useState([]);
   const [ready, setReady] = useState(false);
   const isSpeaking = useRef(false);
+  const keepAliveRef = useRef(null);
 
+  // Load voices async
   useEffect(() => {
     const load = () => {
       const v = window.speechSynthesis?.getVoices() || [];
@@ -13,34 +15,49 @@ export function useTARSVoice() {
         setReady(true);
       }
     };
-
     load();
     window.speechSynthesis?.addEventListener('voiceschanged', load);
-    const t1 = setTimeout(load, 500);
-    const t2 = setTimeout(load, 1500);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      window.speechSynthesis?.removeEventListener('voiceschanged', load);
-    };
+    setTimeout(load, 500);
+    setTimeout(load, 1500);
+    return () => window.speechSynthesis?.removeEventListener('voiceschanged', load);
   }, []);
+
+  // -- Chrome 15s bug fix --
+  // Chrome silently kills speech after 15s
+  // We pause + resume every 10s to reset its internal timer
+  const stopKeepAlive = useCallback(() => {
+    if (keepAliveRef.current) {
+      clearInterval(keepAliveRef.current);
+      keepAliveRef.current = null;
+    }
+  }, []);
+
+  const startKeepAlive = useCallback(() => {
+    stopKeepAlive();
+    keepAliveRef.current = setInterval(() => {
+      if (window.speechSynthesis?.speaking) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      } else {
+        stopKeepAlive();
+      }
+    }, 10000);
+  }, [stopKeepAlive]);
 
   const pickVoice = useCallback((voiceList) => {
     const preferred = [
       'Google UK English Male',
       'Microsoft David Desktop',
+      'Microsoft David',
       'Microsoft Mark',
-      'Alex',
       'Daniel',
+      'Alex',
       'Google US English',
     ];
-
     for (const name of preferred) {
       const match = voiceList.find((v) => v.name.includes(name));
       if (match) return match;
     }
-
     return (
       voiceList.find((v) => v.lang.startsWith('en') && v.name.toLowerCase().includes('male')) ||
       voiceList.find((v) => v.lang.startsWith('en')) ||
@@ -48,13 +65,26 @@ export function useTARSVoice() {
     );
   }, []);
 
-  const doSpeak = useCallback(
-    (text) => {
-      if (!window.speechSynthesis) return;
+  const speak = useCallback(
+    (text, enabled = true) => {
+      if (!enabled || !window.speechSynthesis) return;
 
+      // Wait for voices if not ready yet
+      if (!ready) {
+        setTimeout(() => speak(text, enabled), 800);
+        return;
+      }
+
+      // Cancel anything playing
+      window.speechSynthesis.cancel();
+      stopKeepAlive();
+      isSpeaking.current = false;
+
+      // Clean text
       const clean = String(text || '')
         .replace(/\{name\}/g, '')
-        .replace(/[\u00B7\u2022\u25E6]/g, '')
+        .replace(/[·•◦▓]/g, '')
+        .replace(/\[.*?\]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
 
@@ -62,71 +92,53 @@ export function useTARSVoice() {
 
       const voiceList = window.speechSynthesis.getVoices();
       const voice = pickVoice(voiceList);
-      const sentences = clean.match(/[^.!?]+[.!?]*/g) || [clean];
 
-      if (sentences.length <= 1) {
-        const utterance = new SpeechSynthesisUtterance(clean);
-        if (voice) utterance.voice = voice;
-        utterance.rate = 0.78;
-        utterance.pitch = 0.55;
-        utterance.volume = 0.8;
-        utterance.onstart = () => {
-          isSpeaking.current = true;
-        };
-        utterance.onend = () => {
-          isSpeaking.current = false;
-        };
-        utterance.onerror = () => {
-          isSpeaking.current = false;
-        };
+      const utterance = new SpeechSynthesisUtterance(clean);
+      if (voice) utterance.voice = voice;
+      utterance.rate = 0.82;
+      utterance.pitch = 0.6;
+      utterance.volume = 0.85;
+
+      utterance.onstart = () => {
+        isSpeaking.current = true;
+        startKeepAlive();
+      };
+
+      utterance.onend = () => {
+        isSpeaking.current = false;
+        stopKeepAlive();
+      };
+
+      utterance.onerror = (e) => {
+        // Ignore 'interrupted' errors - those are from cancel()
+        if (e.error !== 'interrupted') {
+          console.warn('TTS error:', e.error);
+        }
+        isSpeaking.current = false;
+        stopKeepAlive();
+      };
+
+      // Small delay before speaking - prevents cut-off on rapid triggers
+      setTimeout(() => {
         window.speechSynthesis.speak(utterance);
-        return;
-      }
-
-      sentences.forEach((sentence, i) => {
-        const u = new SpeechSynthesisUtterance(sentence.trim());
-        if (voice) u.voice = voice;
-        u.rate = 0.78;
-        u.pitch = 0.55;
-        u.volume = 0.8;
-        if (i === 0) {
-          u.onstart = () => {
-            isSpeaking.current = true;
-          };
-        }
-        if (i === sentences.length - 1) {
-          u.onend = () => {
-            isSpeaking.current = false;
-          };
-          u.onerror = () => {
-            isSpeaking.current = false;
-          };
-        }
-        window.speechSynthesis.speak(u);
-      });
+      }, 120);
     },
-    [pickVoice]
-  );
-
-  const speak = useCallback(
-    (text, enabled = true) => {
-      if (!enabled || !ready || !window.speechSynthesis) return;
-
-      if (isSpeaking.current) {
-        window.speechSynthesis.cancel();
-        setTimeout(() => doSpeak(text), 150);
-        return;
-      }
-
-      doSpeak(text);
-    },
-    [ready, voices, doSpeak]
+    [ready, voices, startKeepAlive, stopKeepAlive, pickVoice]
   );
 
   const stop = useCallback(() => {
     window.speechSynthesis?.cancel();
+    stopKeepAlive();
     isSpeaking.current = false;
-  }, []);
+  }, [stopKeepAlive]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel();
+      stopKeepAlive();
+    };
+  }, [stopKeepAlive]);
 
   return { speak, stop, ready };
 }
