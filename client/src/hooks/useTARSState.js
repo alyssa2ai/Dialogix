@@ -36,6 +36,7 @@ export function useTARSState(username) {
   const idleTimerRef = useRef(null);
   const konamiRef = useRef([]);
   const lastActivityRef = useRef(Date.now());
+  const hasGreetedRef = useRef(false);
 
   const showMessage = useCallback((newEmotion, text, duration = 4000) => {
     if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current);
@@ -79,7 +80,11 @@ export function useTARSState(username) {
   }, []);
 
   useEffect(() => {
-    const boot = setTimeout(() => {
+    if (!username) return;
+    if (hasGreetedRef.current) return;
+    hasGreetedRef.current = true;
+
+    const greetTimer = setTimeout(() => {
       const hasMetBefore = sessionStorage.getItem('tars_met');
 
       if (!hasMetBefore) {
@@ -89,12 +94,13 @@ export function useTARSState(username) {
       }
 
       const hour = new Date().getHours();
-      const timeSet = hour < 12 ? TARS_TIME_QUOTES.morning : hour < 17 ? TARS_TIME_QUOTES.afternoon : TARS_TIME_QUOTES.night;
+      const timeSet =
+        hour < 12 ? TARS_TIME_QUOTES.morning : hour < 17 ? TARS_TIME_QUOTES.afternoon : TARS_TIME_QUOTES.night;
       showMessage('greeting', inject(pick(timeSet), username), 4500);
-    }, 1400);
+    }, 1600);
 
-    return () => clearTimeout(boot);
-  }, [showMessage, username]);
+    return () => clearTimeout(greetTimer);
+  }, [username, showMessage]);
 
   useEffect(() => {
     const onceKey = `tars-name-whispered-${String(username || '').toLowerCase() || 'guest'}`;
@@ -127,7 +133,7 @@ export function useTARSState(username) {
   const triggerKonami = useCallback(() => {
     setSpinCount((c) => c + 2);
     showMessage('konami', inject(pick(TARS_KONAMI_QUOTES), username), 5000);
-    setTimeout(() => window.TARS_SWAGGER?.(), 1000);
+    setTimeout(() => window.dispatchEvent(new CustomEvent('tars:swagger')), 1000);
   }, [showMessage, username]);
 
   useEffect(() => {
@@ -199,6 +205,17 @@ export function useTARSState(username) {
   const handleKeywordCheck = useCallback(
     (text) => {
       const lower = String(text || '').toLowerCase();
+
+      if (
+        lower.includes('swagger') ||
+        lower.includes('tars dance') ||
+        lower.includes('tars walk')
+      ) {
+        setTimeout(() => window.dispatchEvent(new CustomEvent('tars:swagger')), 500);
+        showMessage('celebrate', inject('Swagger protocol engaged, {name}.', username), 3000);
+        return;
+      }
+
       for (const [keyword, reaction] of Object.entries(TARS_KEYWORD_REACTIONS)) {
         if (lower.includes(keyword)) {
           if (reaction.emotion === 'spin') setSpinCount((c) => c + 1);

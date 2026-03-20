@@ -2,20 +2,31 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { useSound } from '../hooks/useSound';
 
 export default function Login() {
   const [form, setForm]     = useState({ email: '', password: '' });
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const { unlockAudio } = useSound();
   const navigate  = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    unlockAudio();
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
+
+    // Unlock AudioContext during user gesture.
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) {
+        const ctx = new Ctx();
+        await ctx.resume();
+        window.__AUDIO_CTX__ = ctx;
+      }
+    } catch (audioErr) {
+      console.warn('[Login] audio unlock failed', audioErr);
+    }
+
     try {
       const res = await api.post('/auth/login', form);
       login(res.data.user, res.data.token);

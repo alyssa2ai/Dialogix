@@ -1,246 +1,101 @@
-import { useEffect, useRef } from 'react';
-
-let sharedCtx = null;
-
-const getSharedCtx = () => {
-  if (typeof window === 'undefined') return null;
-  const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return null;
-  if (!sharedCtx) {
-    sharedCtx = new AC();
-  }
-  return sharedCtx;
-};
+import { useRef } from 'react';
 
 export function useSound() {
-  // Keep a stable first hook across hot updates to avoid hook-order mismatch in consumers.
-  const stableRef = useRef(null);
+  const ctxRef = useRef(null);
+
   const getCtx = () => {
-    const ctx = getSharedCtx();
-    if (!ctx) return null;
-    if (ctx.state === 'suspended') {
+    if (window.__AUDIO_CTX__ && window.__AUDIO_CTX__.state !== 'closed') {
+      ctxRef.current = window.__AUDIO_CTX__;
+    }
+
+    if (!ctxRef.current) {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        ctxRef.current = new Ctx();
+      } catch (e) {
+        return null;
+      }
+    }
+
+    if (ctxRef.current.state === 'suspended') {
+      void ctxRef.current.resume();
+    }
+
+    return ctxRef.current;
+  };
+
+  // Kept for compatibility with existing call sites.
+  const unlockAudio = () => {
+    const ctx = getCtx();
+    if (ctx && ctx.state === 'suspended') {
       void ctx.resume();
     }
-    return ctx;
   };
 
-  const unlockAudio = () => {
+  const playTone = (ctx, freq, startTime, duration, volume = 0.04, type = 'sine') => {
     try {
-      stableRef.current = true;
-      const ctx = getCtx();
-      if (!ctx) return;
-      if (ctx.state === 'suspended') {
-        void ctx.resume();
-      }
-    } catch (e) {
-      console.warn('[Sound] unlock failed', e);
-    }
-  };
-
-  const runWithCtx = (callback) => {
-    try {
-      const ctx = getCtx();
-      if (!ctx) {
-        console.warn('[Sound] Web Audio API not available in this browser context.');
-        return;
-      }
-      const run = () => callback(ctx);
-      if (ctx.state === 'suspended') {
-        ctx.resume().then(run).catch((e) => {
-          console.warn('[Sound] resume failed', e);
-        });
-      } else {
-        run();
-      }
-    } catch (e) {
-      console.warn('[Sound] playback failed', e);
-    }
-  };
-
-  // Unlock/resume audio context on first user interaction.
-  useEffect(() => {
-    const unlock = () => unlockAudio();
-
-    window.addEventListener('pointerdown', unlock, { passive: true });
-    window.addEventListener('keydown', unlock, { passive: true });
-    window.addEventListener('touchstart', unlock, { passive: true });
-
-    return () => {
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('keydown', unlock);
-      window.removeEventListener('touchstart', unlock);
-    };
-  }, []);
-
-  // Soft sci-fi send beep
-  const playSend = () => {
-    runWithCtx((ctx) => {
-      const now = ctx.currentTime;
-      const oscA = ctx.createOscillator();
-      const oscB = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-
-      oscA.type = 'triangle';
-      oscA.frequency.setValueAtTime(360, now);
-      oscA.frequency.exponentialRampToValueAtTime(720, now + 0.18);
-
-      oscB.type = 'sine';
-      oscB.frequency.setValueAtTime(540, now);
-      oscB.frequency.exponentialRampToValueAtTime(880, now + 0.18);
-
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1800, now);
-      filter.frequency.linearRampToValueAtTime(2600, now + 0.2);
-
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.08, now + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-
-      oscA.connect(filter);
-      oscB.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      oscA.start(now);
-      oscB.start(now);
-      oscA.stop(now + 0.3);
-      oscB.stop(now + 0.3);
-    });
-  };
-
-  // Signal received - two tone chime
-  const playReceive = () => {
-    runWithCtx((ctx) => {
-      const now = ctx.currentTime;
-
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(392, now);
-      osc1.frequency.linearRampToValueAtTime(466, now + 0.22);
-      gain1.gain.setValueAtTime(0, now);
-      gain1.gain.linearRampToValueAtTime(0.075, now + 0.03);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.4);
-
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(587, now + 0.16);
-      osc2.frequency.linearRampToValueAtTime(740, now + 0.42);
-      gain2.gain.setValueAtTime(0, now + 0.16);
-      gain2.gain.linearRampToValueAtTime(0.07, now + 0.22);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.62);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(now + 0.16);
-      osc2.stop(now + 0.64);
-    });
-  };
-
-  // Boot up power hum
-  const playBoot = () => {
-    try {
-      // Create a fresh context each time for boot.
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-      const playTone = (freq, startTime, duration, volume = 0.04) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-
-        filter.type = 'lowpass';
-        filter.frequency.value = 800;
-
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-
-        gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
-        gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + startTime + 0.1);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
-
-        osc.start(ctx.currentTime + startTime);
-        osc.stop(ctx.currentTime + startTime + duration);
-      };
-
-      // Boot sequence - rising tones.
-      playTone(60, 0.0, 1.5, 0.03);
-      playTone(80, 0.5, 1.2, 0.025);
-      playTone(120, 1.0, 1.0, 0.02);
-      playTone(180, 1.5, 0.8, 0.025);
-      playTone(240, 2.0, 0.6, 0.03);
-      playTone(320, 2.5, 0.4, 0.02);
-    } catch (e) {
-      console.warn('Boot sound failed:', e);
-    }
-  };
-
-  // Error / warning blip
-  const playError = () => {
-    runWithCtx((ctx) => {
-      const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
 
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(260, now);
-      osc.frequency.exponentialRampToValueAtTime(180, now + 0.24);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
 
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.07, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + startTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
 
-      osc.start(now);
-      osc.stop(now + 0.26);
-    });
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration + 0.1);
+    } catch (e) {
+      // Ignore isolated oscillator failures.
+    }
   };
 
-  // Session create - soft whoosh
+  const playSend = () => {
+    const ctx = getCtx();
+    if (!ctx) return;
+    playTone(ctx, 520, 0, 0.08, 0.06);
+    playTone(ctx, 820, 0.08, 0.12, 0.04);
+  };
+
+  const playReceive = () => {
+    const ctx = getCtx();
+    if (!ctx) return;
+    playTone(ctx, 440, 0, 0.2, 0.05);
+    playTone(ctx, 660, 0.18, 0.25, 0.04);
+  };
+
   const playNewChat = () => {
-    runWithCtx((ctx) => {
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const shimmer = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.exponentialRampToValueAtTime(880, now + 0.45);
-
-      shimmer.type = 'sine';
-      shimmer.frequency.setValueAtTime(660, now + 0.06);
-      shimmer.frequency.exponentialRampToValueAtTime(1320, now + 0.4);
-
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(740, now);
-      filter.Q.setValueAtTime(1.4, now);
-
-      osc.connect(filter);
-      shimmer.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.065, now + 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-
-      osc.start(now);
-      shimmer.start(now + 0.06);
-      osc.stop(now + 0.5);
-      shimmer.stop(now + 0.5);
-    });
+    const ctx = getCtx();
+    if (!ctx) return;
+    playTone(ctx, 300, 0, 0.15, 0.05);
+    playTone(ctx, 600, 0.1, 0.2, 0.04);
+    playTone(ctx, 900, 0.22, 0.15, 0.03);
   };
 
-  return { playSend, playReceive, playError, playNewChat, playBoot, unlockAudio };
+  const playError = () => {
+    const ctx = getCtx();
+    if (!ctx) return;
+    playTone(ctx, 220, 0, 0.15, 0.05, 'square');
+    playTone(ctx, 180, 0.1, 0.15, 0.04, 'square');
+  };
+
+  const playBoot = () => {
+    const ctx = getCtx();
+    if (!ctx) return;
+
+    playTone(ctx, 55, 0.0, 0.8, 0.03, 'sawtooth');
+    playTone(ctx, 80, 0.4, 0.8, 0.03, 'sawtooth');
+    playTone(ctx, 110, 0.8, 0.6, 0.03, 'sawtooth');
+    playTone(ctx, 160, 1.2, 0.5, 0.03, 'sawtooth');
+    playTone(ctx, 220, 1.6, 0.4, 0.025, 'sawtooth');
+    playTone(ctx, 320, 1.9, 0.3, 0.02, 'sine');
+    playTone(ctx, 440, 2.1, 0.25, 0.025, 'sine');
+    playTone(ctx, 660, 2.3, 0.2, 0.02, 'sine');
+  };
+
+  return { playSend, playReceive, playNewChat, playError, playBoot, unlockAudio };
 }

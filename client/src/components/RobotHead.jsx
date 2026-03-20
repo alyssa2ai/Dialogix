@@ -937,6 +937,42 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
         </Canvas>
       </div>
 
+      {embedded && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            zIndex: 10,
+            display: 'flex',
+            gap: '6px',
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setVoiceEnabled((v) => !v);
+            }}
+            style={{
+              background: voiceEnabled ? `${config.color}20` : 'rgba(255,255,255,0.05)',
+              border: `0.5px solid ${voiceEnabled ? config.color + '60' : 'rgba(255,255,255,0.1)'}`,
+              borderRadius: '6px',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-ui)',
+              fontSize: '8px',
+              color: voiceEnabled ? config.color : 'var(--text-3)',
+              letterSpacing: '0.1em',
+              transition: 'all 0.2s',
+              backdropFilter: 'blur(8px)',
+            }}
+            title={voiceEnabled ? 'Mute TARS voice' : 'Unmute TARS voice'}
+          >
+            {voiceEnabled ? 'VOICE ON' : 'VOICE OFF'}
+          </button>
+        </div>
+      )}
+
       {/* Bottom controls */}
       {!embedded && (
         <div

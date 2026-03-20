@@ -18,9 +18,10 @@ export default function Chat() {
   const { playNewChat } = useSound();
 
   useEffect(() => {
-    window.TARS_SWAGGER = () => setShowSwagger(true);
+    const handler = () => setShowSwagger(true);
+    window.addEventListener('tars:swagger', handler);
     return () => {
-      delete window.TARS_SWAGGER;
+      window.removeEventListener('tars:swagger', handler);
     };
   }, []);
 

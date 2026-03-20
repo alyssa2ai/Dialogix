@@ -89,14 +89,14 @@ export default function BootSequence({ onComplete }) {
     setFadeOut(false);
     setProgress(0);
 
-    // Play boot sound - works because user just clicked login.
+    // Audio context is already unlocked from login click; just play.
     const bootSoundTimer = setTimeout(() => {
       try {
         playBoot();
       } catch (e) {
         console.warn('[BootSequence] playBoot failed', e);
       }
-    }, 200);
+    }, 100);
     timeoutsRef.current.push(bootSoundTimer);
 
     BOOT_LINES.forEach((line, i) => {

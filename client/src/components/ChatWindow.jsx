@@ -93,7 +93,7 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
       lowerText.includes('tars walk') ||
       lowerText.includes('tars dance')
     ) {
-      setTimeout(() => window.TARS_SWAGGER?.(), 800);
+      setTimeout(() => window.dispatchEvent(new CustomEvent('tars:swagger')), 800);
     }
 
     setMessages(prev => [...prev, { sender: 'user', text, timestamp: new Date() }]);
