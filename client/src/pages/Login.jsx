@@ -20,6 +20,9 @@ export default function Login() {
       const A = window.AudioContext || window.webkitAudioContext;
       const ctx = new A();
       await ctx.resume();
+      ctx.onstatechange = () => {
+        if (ctx.state === 'suspended') ctx.resume();
+      };
       const tones = [
         [55, 0], [80, 0.25], [110, 0.5], [160, 0.75],
         [220, 1.0], [320, 1.25], [440, 1.5], [660, 1.75]
@@ -44,7 +47,7 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', form);
       login(res.data.user, res.data.token);
-      navigate('/chat');
+      setTimeout(() => navigate('/chat'), 300);
     } catch (err) {
       setError(err.response?.data?.message || 'Connection failed');
     } finally {
