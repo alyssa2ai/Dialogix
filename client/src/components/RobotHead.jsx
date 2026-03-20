@@ -553,7 +553,7 @@ function DragController({ dragRotation, onDragStart, onDragEnd }) {
   return null;
 }
 
-export default function RobotHead({ isThinking, isTransmitting, embedded }) {
+export default function RobotHead({ isThinking, isTransmitting, embedded, voiceOverride }) {
   const mouse = useMouse();
   const [hovered, setHovered] = useState(false);
   const [showPersona, setShowPersona] = useState(false);
@@ -568,7 +568,10 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
   const { playNewChat, playSend } = useSound();
   const { user } = useAuth();
   const { speak, stop, ready } = useTARSVoice();
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceEnabledState, setVoiceEnabledState] = useState(true);
+  const voiceEnabled = embedded
+    ? (voiceOverride !== undefined ? voiceOverride : true)
+    : voiceEnabledState;
   const lastSpokenRef = useRef('');
 
   const {
@@ -937,42 +940,6 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
         </Canvas>
       </div>
 
-      {embedded && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            zIndex: 10,
-            display: 'flex',
-            gap: '6px',
-          }}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setVoiceEnabled((v) => !v);
-            }}
-            style={{
-              background: voiceEnabled ? `${config.color}20` : 'rgba(255,255,255,0.05)',
-              border: `0.5px solid ${voiceEnabled ? config.color + '60' : 'rgba(255,255,255,0.1)'}`,
-              borderRadius: '6px',
-              padding: '4px 8px',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-ui)',
-              fontSize: '8px',
-              color: voiceEnabled ? config.color : 'var(--text-3)',
-              letterSpacing: '0.1em',
-              transition: 'all 0.2s',
-              backdropFilter: 'blur(8px)',
-            }}
-            title={voiceEnabled ? 'Mute TARS voice' : 'Unmute TARS voice'}
-          >
-            {voiceEnabled ? 'VOICE ON' : 'VOICE OFF'}
-          </button>
-        </div>
-      )}
-
       {/* Bottom controls */}
       {!embedded && (
         <div
@@ -999,7 +966,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setVoiceEnabled((v) => !v);
+                setVoiceEnabledState((v) => !v);
               }}
               style={{
                 background: 'none',

@@ -14,6 +14,7 @@ export default function Chat() {
   const [isThinking, setIsThinking]           = useState(false);
   const [isTransmitting, setIsTransmitting]   = useState(false);
   const [showSwagger, setShowSwagger]         = useState(false);
+  const [tarsVoice, setTarsVoice]             = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { playNewChat } = useSound();
 
@@ -194,10 +195,102 @@ export default function Chat() {
                 isThinking={isThinking}
                 isTransmitting={isTransmitting}
                 embedded={true}
+                voiceOverride={tarsVoice}
               />
             </div>
           )}
         </div>
+
+        {!sidebarCollapsed && (
+          <div
+            style={{
+              padding: '8px 12px',
+              borderBottom: '0.5px solid rgba(124,92,191,0.1)',
+              display: 'flex',
+              gap: '6px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <button
+              onClick={() => setShowSwagger(true)}
+              style={{
+                flex: 1,
+                padding: '7px 0',
+                background: 'rgba(124,92,191,0.15)',
+                border: '0.5px solid rgba(124,92,191,0.5)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-ui)',
+                fontSize: '9px',
+                color: '#a78bfa',
+                letterSpacing: '0.1em',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(124,92,191,0.3)';
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(124,92,191,0.35)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(124,92,191,0.15)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              ⬡ SWAGGER
+            </button>
+
+            <button
+              onClick={() => setTarsVoice((v) => !v)}
+              style={{
+                flex: 1,
+                padding: '7px 0',
+                background: tarsVoice ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
+                border: `0.5px solid ${tarsVoice ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.15)'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-ui)',
+                fontSize: '9px',
+                color: tarsVoice ? '#34d399' : '#4a5568',
+                letterSpacing: '0.1em',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = tarsVoice ? '0 0 14px rgba(16,185,129,0.3)' : 'none';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              {tarsVoice ? '◉ VOICE' : '◎ MUTED'}
+            </button>
+
+            <button
+              onClick={() => {}}
+              style={{
+                flex: 1,
+                padding: '6px 0',
+                background: 'rgba(56,189,248,0.1)',
+                border: '0.5px solid rgba(56,189,248,0.4)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-ui)',
+                fontSize: '9px',
+                color: '#67e8f9',
+                letterSpacing: '0.12em',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(56,189,248,0.25)';
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(56,189,248,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(56,189,248,0.1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              ◈ WALK
+            </button>
+          </div>
+        )}
 
         {!sidebarCollapsed && <TARSStats />}
 
