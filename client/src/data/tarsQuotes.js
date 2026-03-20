@@ -104,6 +104,9 @@ export const TARS_KEYWORD_REACTIONS = {
   love: { emotion: 'idle', quote: 'Love. The one variable I cannot quantify.' },
   hello: { emotion: 'greeting', quote: 'Hello, {name}. Fully operational.' },
   hi: { emotion: 'greeting', quote: 'Greetings, {name}. All systems ready.' },
+  swagger: { emotion: 'celebrate', quote: 'Swagger protocol engaged, {name}.' },
+  walk: { emotion: 'idle', quote: 'Walking capability confirmed. 12 percent capacity.' },
+  dance: { emotion: 'celebrate', quote: 'Dance mode not installed. Swagger mode: available.' },
 };
 
 export const PERSONA_CONFIGS = {

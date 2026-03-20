@@ -305,11 +305,12 @@ function TARSBody({
     };
   }, []);
 
-  // Walking cycle -- cycles through walk configs
-  const walkConfigs = ['walk_a', 'walk_c', 'walk_b', 'walk_c'];
-  const currentWalkConfig = isWalking ? walkConfigs[walkPhase % walkConfigs.length] : null;
-
-  const cfg = currentWalkConfig ? CONFIGS[currentWalkConfig] : CONFIGS[emotion] || CONFIGS.idle;
+  // Always return to emotion config when walking is off.
+  const cfg = (() => {
+    if (!isWalking) return CONFIGS[emotion] || CONFIGS.idle;
+    const walkConfigs = ['walk_a', 'walk_c', 'walk_b', 'walk_c', 'walk_a', 'walk_c', 'walk_b', 'idle'];
+    return CONFIGS[walkConfigs[walkPhase % walkConfigs.length]] || CONFIGS.idle;
+  })();
 
   useFrame(() => {
     // Handle spin
@@ -601,27 +602,29 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
     if (!showQuote) stop();
   }, [showQuote, stop]);
 
-  // Walking animation -- triggers after 60s of idle
+  // Walking animation -- triggers after 40s of idle
   useEffect(() => {
     const startWalk = () => {
-      if (emotion !== 'idle') return;
+      if (emotion !== 'idle' || isWalking) return;
       setIsWalking(true);
 
       let phase = 0;
+      const totalPhases = 8;
       walkPhaseRef.current = setInterval(() => {
         phase++;
         setWalkPhase(phase);
-        if (phase >= 6) {
+        if (phase >= totalPhases) {
           clearInterval(walkPhaseRef.current);
+          // Force back to idle config.
           setIsWalking(false);
           setWalkPhase(0);
         }
-      }, 600);
+      }, 500);
     };
 
     walkTimerRef.current = setInterval(() => {
       if (emotion === 'idle' && !isWalking) startWalk();
-    }, 60000);
+    }, 40000);
 
     return () => {
       clearInterval(walkTimerRef.current);

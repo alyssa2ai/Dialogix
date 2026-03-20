@@ -124,19 +124,24 @@ export function useTARSState(username) {
     };
   }, [emotion, showQuote, showMessage, username]);
 
+  const triggerKonami = useCallback(() => {
+    setSpinCount((c) => c + 2);
+    showMessage('konami', inject(pick(TARS_KONAMI_QUOTES), username), 5000);
+    setTimeout(() => window.TARS_SWAGGER?.(), 1000);
+  }, [showMessage, username]);
+
   useEffect(() => {
     const handler = (e) => {
       konamiRef.current = [...konamiRef.current, e.key].slice(-8);
       if (konamiRef.current.join(',') === KONAMI.join(',')) {
-        setSpinCount((c) => c + 3);
-        showMessage('konami', inject(pick(TARS_KONAMI_QUOTES), username), 5000);
+        triggerKonami();
         konamiRef.current = [];
       }
     };
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showMessage, username]);
+  }, [triggerKonami]);
 
   useEffect(() => {
     return () => {

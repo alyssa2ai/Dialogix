@@ -5,6 +5,7 @@ import ChatWindow from '../components/ChatWindow';
 import RobotHead from '../components/RobotHead';
 import TARSStats from '../components/TARSStats';
 import CommandPalette from '../components/CommandPalette';
+import TARSSwagger from '../components/TARSSwagger';
 import { useSound } from '../hooks/useSound';
 
 export default function Chat() {
@@ -12,8 +13,16 @@ export default function Chat() {
   const [activeChatId, setActiveChatId]       = useState(null);
   const [isThinking, setIsThinking]           = useState(false);
   const [isTransmitting, setIsTransmitting]   = useState(false);
+  const [showSwagger, setShowSwagger]         = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { playNewChat } = useSound();
+
+  useEffect(() => {
+    window.TARS_SWAGGER = () => setShowSwagger(true);
+    return () => {
+      delete window.TARS_SWAGGER;
+    };
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -254,6 +263,8 @@ export default function Chat() {
         onClearChat={handleClearChat}
         onSendPrompt={handleSendPrompt}
       />
+
+      {showSwagger && <TARSSwagger onComplete={() => setShowSwagger(false)} />}
     </div>
   );
 }

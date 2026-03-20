@@ -87,6 +87,14 @@ export default function ChatWindow({ chatId, onTitleUpdate, onThinkingChange, on
     unlockAudio();
     playSend();
     window.TARS?.onKeywordCheck?.(text);
+    const lowerText = text.toLowerCase();
+    if (
+      lowerText.includes('swagger') ||
+      lowerText.includes('tars walk') ||
+      lowerText.includes('tars dance')
+    ) {
+      setTimeout(() => window.TARS_SWAGGER?.(), 800);
+    }
 
     setMessages(prev => [...prev, { sender: 'user', text, timestamp: new Date() }]);
 
