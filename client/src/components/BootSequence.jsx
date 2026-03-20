@@ -80,7 +80,7 @@ export default function BootSequence({ onComplete }) {
   const [progress, setProgress] = useState(0);
   const containerRef = useRef(null);
   const timeoutsRef = useRef([]);
-  const { playBoot } = useSound();
+  const { playBoot, unlockAudio } = useSound();
 
   useEffect(() => {
     // Reset state for strict mode double-effect safety.
@@ -89,14 +89,22 @@ export default function BootSequence({ onComplete }) {
     setFadeOut(false);
     setProgress(0);
 
+    // Attempt unlock here as an extra safety net for browsers that resuspend audio.
+    try {
+      unlockAudio();
+    } catch (_) {
+      // Ignore unlock errors; boot visual should continue.
+    }
+
     // Audio context is already unlocked from login click; just play.
     const bootSoundTimer = setTimeout(() => {
       try {
+        unlockAudio();
         playBoot();
       } catch (e) {
         console.warn('[BootSequence] playBoot failed', e);
       }
-    }, 100);
+    }, 180);
     timeoutsRef.current.push(bootSoundTimer);
 
     BOOT_LINES.forEach((line, i) => {

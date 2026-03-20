@@ -28,6 +28,8 @@ export default function MessageBubble({ message, username, isLatest }) {
         gap: '10px',
         padding: '0',
         flexDirection: isUser ? 'row-reverse' : 'row',
+        paddingLeft: isUser ? '20px' : '0px',
+        paddingRight: isUser ? '0px' : '20px',
       }}
     >
       {/* Avatar */}

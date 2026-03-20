@@ -253,33 +253,6 @@ export default function Chat() {
             >
               {tarsVoice ? '◉ VOICE' : '◎ MUTED'}
             </button>
-
-            <button
-              onClick={() => {}}
-              style={{
-                flex: 1,
-                padding: '6px 0',
-                background: 'rgba(56,189,248,0.1)',
-                border: '0.5px solid rgba(56,189,248,0.4)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-ui)',
-                fontSize: '9px',
-                color: '#67e8f9',
-                letterSpacing: '0.12em',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(56,189,248,0.25)';
-                e.currentTarget.style.boxShadow = '0 0 12px rgba(56,189,248,0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(56,189,248,0.1)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              ◈ WALK
-            </button>
           </div>
         )}
 

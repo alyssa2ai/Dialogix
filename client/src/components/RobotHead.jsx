@@ -570,6 +570,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded, voiceO
     ? (voiceOverride !== undefined ? voiceOverride : true)
     : voiceEnabledState;
   const lastSpokenRef = useRef('');
+  const pendingSpeakRef = useRef('');
 
   const {
     emotion,
@@ -592,11 +593,24 @@ export default function RobotHead({ isThinking, isTransmitting, embedded, voiceO
 
   // Speak quotes
   useEffect(() => {
-    if (!showQuote || !quote || !voiceEnabled || !ready) return;
+    if (!showQuote || !quote || !voiceEnabled) return;
+    if (!ready) {
+      pendingSpeakRef.current = quote;
+      return;
+    }
     if (quote === lastSpokenRef.current) return;
     lastSpokenRef.current = quote;
+    pendingSpeakRef.current = '';
     speak(quote, voiceEnabled);
   }, [showQuote, quote, voiceEnabled, ready, speak]);
+
+  useEffect(() => {
+    if (!ready || !voiceEnabled || !pendingSpeakRef.current) return;
+    if (pendingSpeakRef.current === lastSpokenRef.current) return;
+    lastSpokenRef.current = pendingSpeakRef.current;
+    speak(pendingSpeakRef.current, voiceEnabled);
+    pendingSpeakRef.current = '';
+  }, [ready, voiceEnabled, speak]);
 
   useEffect(() => {
     if (!showQuote) stop();
@@ -640,6 +654,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded, voiceO
   // Expose TARS globally
   useEffect(() => {
     window.TARS = {
+      onGreeting: handleClick,
       onTypingStart: handleTypingStart,
       onTypingEnd: handleTypingEnd,
       onEmptySubmit: handleEmptySubmit,
@@ -654,6 +669,7 @@ export default function RobotHead({ isThinking, isTransmitting, embedded, voiceO
     handleMessageReceived,
     handleError,
     handleKeywordCheck,
+    handleClick,
   ]);
 
   const emotionColor =
