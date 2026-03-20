@@ -3,6 +3,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
+function playBootTones() {
+  try {
+    const A = window.AudioContext || window.webkitAudioContext;
+    if (!A) return;
+    const ctx = new A();
+
+    [[50, 0], [80, 0.3], [120, 0.6], [200, 0.9], [300, 1.2], [440, 1.5], [600, 1.7], [800, 1.9]].forEach(
+      ([freq, start]) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.type = 'sine';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0, ctx.currentTime + start);
+        g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + start + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + 0.4);
+        o.start(ctx.currentTime + start);
+        o.stop(ctx.currentTime + start + 0.5);
+      }
+    );
+  } catch (_) {}
+}
+
 export default function Login() {
   const [form, setForm]     = useState({ email: '', password: '' });
   const [error, setError]   = useState('');
@@ -17,45 +41,6 @@ export default function Login() {
 
     try {
       const res = await api.post('/auth/login', form);
-
-      // Play boot sound while still in the login click gesture path.
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-          const ctx = new AudioCtx();
-          await ctx.resume();
-
-          const tone = (freq, start, dur, vol, type = 'sawtooth') => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            const filt = ctx.createBiquadFilter();
-            filt.type = 'lowpass';
-            filt.frequency.value = 700;
-            osc.connect(filt);
-            filt.connect(gain);
-            gain.connect(ctx.destination);
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-            gain.gain.setValueAtTime(0, ctx.currentTime + start);
-            gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + start + 0.08);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-            osc.start(ctx.currentTime + start);
-            osc.stop(ctx.currentTime + start + dur + 0.1);
-          };
-
-          tone(50, 0.0, 1.0, 0.04);
-          tone(80, 0.3, 0.9, 0.035);
-          tone(120, 0.7, 0.7, 0.03);
-          tone(180, 1.1, 0.6, 0.03);
-          tone(260, 1.5, 0.5, 0.025, 'sine');
-          tone(380, 1.9, 0.4, 0.025, 'sine');
-          tone(520, 2.2, 0.3, 0.02, 'sine');
-          tone(720, 2.4, 0.25, 0.02, 'sine');
-        }
-      } catch (soundErr) {
-        console.warn('Sound error:', soundErr);
-      }
-
       login(res.data.user, res.data.token);
       navigate('/chat');
     } catch (err) {
@@ -125,7 +110,7 @@ export default function Login() {
               </div>
             )}
 
-            <button type="submit" disabled={loading} style={{
+            <button type="submit" disabled={loading} onClick={() => playBootTones()} style={{
               width: '100%',
               background: loading ? 'rgba(168,85,247,0.3)' : 'linear-gradient(135deg,#3b82f6,#a855f7)',
               border: 'none', borderRadius: '12px', padding: '13px',

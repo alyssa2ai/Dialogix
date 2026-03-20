@@ -6,6 +6,7 @@ import RobotHead from '../components/RobotHead';
 import CommandPalette from '../components/CommandPalette';
 import TARSSwagger from '../components/TARSSwagger';
 import { useSound } from '../hooks/useSound';
+import { useAuth } from '../context/AuthContext';
 
 export default function Chat() {
   const [sessions, setSessions]               = useState([]);
@@ -15,7 +16,51 @@ export default function Chat() {
   const [showSwagger, setShowSwagger]         = useState(false);
   const [tarsVoice, setTarsVoice]             = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { user } = useAuth();
   const { playNewChat } = useSound();
+
+  useEffect(() => {
+    if (!user?.username) return;
+
+    const alreadyGreeted = sessionStorage.getItem('greeted');
+    if (alreadyGreeted) return;
+    sessionStorage.setItem('greeted', 'true');
+
+    const timer = setTimeout(() => {
+      try {
+        if (!window.speechSynthesis) return;
+
+        const hour = new Date().getHours();
+        const timeWord = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+
+        const greetings = [
+          `Good ${timeWord}, ${user.username}. TARS online. Ready for your mission.`,
+          `Welcome back, ${user.username}. All systems nominal.`,
+          `${user.username}. Neural uplink established. Let's explore.`,
+          `Good ${timeWord} ${user.username}. Synapse Core ready.`,
+        ];
+
+        const text = greetings[Math.floor(Math.random() * greetings.length)];
+        const u = new SpeechSynthesisUtterance(text);
+
+        const voices = window.speechSynthesis.getVoices();
+        const voice =
+          voices.find((v) => v.name.includes('Google UK English Male')) ||
+          voices.find((v) => v.name.includes('Microsoft David')) ||
+          voices.find((v) => v.lang?.startsWith('en'));
+
+        if (voice) u.voice = voice;
+        u.rate = 0.85;
+        u.pitch = 0.6;
+        u.volume = 0.9;
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      } catch (_) {}
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [user?.username]);
 
   useEffect(() => {
     const load = async () => {
