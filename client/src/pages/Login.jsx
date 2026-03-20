@@ -15,24 +15,47 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    // Unlock audio during this user gesture.
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) {
-        const ctx = new AudioCtx();
-        const buf = ctx.createBuffer(1, 1, 22050);
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(ctx.destination);
-        src.start(0);
-        await ctx.resume();
-        await ctx.close();
-        sessionStorage.setItem('audio_unlocked', 'true');
-      }
-    } catch (_) {}
-
     try {
       const res = await api.post('/auth/login', form);
+
+      // Play boot sound while still in the login click gesture path.
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          await ctx.resume();
+
+          const tone = (freq, start, dur, vol, type = 'sawtooth') => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filt = ctx.createBiquadFilter();
+            filt.type = 'lowpass';
+            filt.frequency.value = 700;
+            osc.connect(filt);
+            filt.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+            gain.gain.setValueAtTime(0, ctx.currentTime + start);
+            gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + start + 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+            osc.start(ctx.currentTime + start);
+            osc.stop(ctx.currentTime + start + dur + 0.1);
+          };
+
+          tone(50, 0.0, 1.0, 0.04);
+          tone(80, 0.3, 0.9, 0.035);
+          tone(120, 0.7, 0.7, 0.03);
+          tone(180, 1.1, 0.6, 0.03);
+          tone(260, 1.5, 0.5, 0.025, 'sine');
+          tone(380, 1.9, 0.4, 0.025, 'sine');
+          tone(520, 2.2, 0.3, 0.02, 'sine');
+          tone(720, 2.4, 0.25, 0.02, 'sine');
+        }
+      } catch (soundErr) {
+        console.warn('Sound error:', soundErr);
+      }
+
       login(res.data.user, res.data.token);
       navigate('/chat');
     } catch (err) {

@@ -84,23 +84,28 @@ export function useTARSState(username) {
     if (hasGreetedRef.current) return;
     hasGreetedRef.current = true;
 
-    const greetTimer = setTimeout(() => {
+    const timer = setTimeout(() => {
       const hasMetBefore = sessionStorage.getItem('tars_met');
 
-      if (!hasMetBefore) {
-        sessionStorage.setItem('tars_met', 'true');
-        showMessage('greeting', inject(pick(TARS_FIRST_CONTACT), username), 6000);
-        return;
-      }
+      const greetQuote = hasMetBefore
+        ? (() => {
+            const hour = new Date().getHours();
+            const set =
+              hour < 12
+                ? TARS_TIME_QUOTES.morning
+                : hour < 17
+                  ? TARS_TIME_QUOTES.afternoon
+                  : TARS_TIME_QUOTES.night;
+            return inject(pick(set), username);
+          })()
+        : inject(pick(TARS_FIRST_CONTACT), username);
 
-      const hour = new Date().getHours();
-      const timeSet =
-        hour < 12 ? TARS_TIME_QUOTES.morning : hour < 17 ? TARS_TIME_QUOTES.afternoon : TARS_TIME_QUOTES.night;
-      showMessage('greeting', inject(pick(timeSet), username), 4500);
-    }, 1600);
+      sessionStorage.setItem('tars_met', 'true');
+      showMessage('greeting', greetQuote, 5000);
+    }, 2000);
 
-    return () => clearTimeout(greetTimer);
-  }, [username, showMessage]);
+    return () => clearTimeout(timer);
+  }, [username]);
 
   useEffect(() => {
     const onceKey = `tars-name-whispered-${String(username || '').toLowerCase() || 'guest'}`;
