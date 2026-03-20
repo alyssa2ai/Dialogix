@@ -22,10 +22,6 @@ export default function Chat() {
   useEffect(() => {
     if (!user?.username) return;
 
-    const alreadyGreeted = sessionStorage.getItem('greeted');
-    if (alreadyGreeted) return;
-    sessionStorage.setItem('greeted', 'true');
-
     const timer = setTimeout(() => {
       try {
         if (!window.speechSynthesis) return;
@@ -36,26 +32,33 @@ export default function Chat() {
         const greetings = [
           `Good ${timeWord}, ${user.username}. TARS online. Ready for your mission.`,
           `Welcome back, ${user.username}. All systems nominal.`,
-          `${user.username}. Neural uplink established. Let's explore.`,
+          `${user.username}. Neural uplink established. Ready to explore.`,
           `Good ${timeWord} ${user.username}. Synapse Core ready.`,
         ];
 
         const text = greetings[Math.floor(Math.random() * greetings.length)];
-        const u = new SpeechSynthesisUtterance(text);
 
-        const voices = window.speechSynthesis.getVoices();
-        const voice =
-          voices.find((v) => v.name.includes('Google UK English Male')) ||
-          voices.find((v) => v.name.includes('Microsoft David')) ||
-          voices.find((v) => v.lang?.startsWith('en'));
+        const speak = () => {
+          const voices = window.speechSynthesis.getVoices();
+          const u = new SpeechSynthesisUtterance(text);
+          const voice =
+            voices.find((v) => v.name.includes('Google UK English Male')) ||
+            voices.find((v) => v.name.includes('Microsoft David')) ||
+            voices.find((v) => v.name.includes('Daniel')) ||
+            voices.find((v) => v.lang?.startsWith('en'));
+          if (voice) u.voice = voice;
+          u.rate = 0.82;
+          u.pitch = 0.58;
+          u.volume = 0.9;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(u);
+        };
 
-        if (voice) u.voice = voice;
-        u.rate = 0.85;
-        u.pitch = 0.6;
-        u.volume = 0.9;
-
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(u);
+        if (window.speechSynthesis.getVoices().length > 0) {
+          speak();
+        } else {
+          window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
+        }
       } catch (_) {}
     }, 2500);
 
