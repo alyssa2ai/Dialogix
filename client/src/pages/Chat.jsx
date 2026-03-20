@@ -40,6 +40,11 @@ export default function Chat() {
 
         const speak = () => {
           const voices = window.speechSynthesis.getVoices();
+          if (voices.length === 0) {
+            // Voices not loaded yet - wait for them
+            window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
+            return;
+          }
           const u = new SpeechSynthesisUtterance(text);
           const voice =
             voices.find((v) => v.name.includes('Google UK English Male')) ||
@@ -54,13 +59,9 @@ export default function Chat() {
           window.speechSynthesis.speak(u);
         };
 
-        if (window.speechSynthesis.getVoices().length > 0) {
-          speak();
-        } else {
-          window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
-        }
+        speak();
       } catch (_) {}
-    }, 2500);
+    }, 3500);
 
     return () => clearTimeout(timer);
   }, [user?.username]);

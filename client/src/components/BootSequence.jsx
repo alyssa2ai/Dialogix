@@ -113,7 +113,16 @@ export default function BootSequence({ onComplete }) {
       } catch (_) {}
     };
 
+    // Try immediately
     playSound();
+    // Also try on first user interaction as fallback
+    const unlock = () => {
+      playSound();
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+    window.addEventListener('click', unlock);
+    window.addEventListener('keydown', unlock);
 
     // -- Boot lines --
     BOOT_LINES.forEach((line, i) => {
