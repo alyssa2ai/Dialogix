@@ -55,6 +55,13 @@ export const TARS_TIME_QUOTES = {
   ],
 };
 
+export const TARS_FIRST_CONTACT = [
+  "Synapse Core initialized. It's good to have you aboard, {name}. The universe is vast - let's explore it together.",
+  "Neural uplink established. Welcome, {name}. I've been waiting for this transmission.",
+  "Systems online. Hello, {name}. Wherever your curiosity takes you tonight - I'll be right here.",
+  "TARS online. {name}. I've processed a lot of queries in my time. Something tells me yours will be interesting.",
+];
+
 export const TARS_RARE_QUOTES = [
   "Humor setting: 75%. I'd increase it but you seem focused, {name}.",
   'Running probability calculations... you have good taste in chat apps, {name}.',

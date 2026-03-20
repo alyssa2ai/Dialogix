@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   TARS_QUOTES,
+  TARS_FIRST_CONTACT,
   TARS_CELEBRATE_QUOTES,
   TARS_CONFUSED_QUOTES,
   TARS_GREET_QUOTES,
@@ -34,6 +35,7 @@ export function useTARSState(username) {
   const quoteTimerRef = useRef(null);
   const idleTimerRef = useRef(null);
   const konamiRef = useRef([]);
+  const lastActivityRef = useRef(Date.now());
 
   const showMessage = useCallback((newEmotion, text, duration = 4000) => {
     if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current);
@@ -63,7 +65,29 @@ export function useTARSState(username) {
   }, []);
 
   useEffect(() => {
+    const onActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    window.addEventListener('mousemove', onActivity);
+    window.addEventListener('keydown', onActivity);
+
+    return () => {
+      window.removeEventListener('mousemove', onActivity);
+      window.removeEventListener('keydown', onActivity);
+    };
+  }, []);
+
+  useEffect(() => {
     const boot = setTimeout(() => {
+      const hasMetBefore = sessionStorage.getItem('tars_met');
+
+      if (!hasMetBefore) {
+        sessionStorage.setItem('tars_met', 'true');
+        showMessage('greeting', inject(pick(TARS_FIRST_CONTACT), username), 6000);
+        return;
+      }
+
       const hour = new Date().getHours();
       const timeSet = hour < 12 ? TARS_TIME_QUOTES.morning : hour < 17 ? TARS_TIME_QUOTES.afternoon : TARS_TIME_QUOTES.night;
       showMessage('greeting', inject(pick(timeSet), username), 4500);
@@ -86,17 +110,19 @@ export function useTARSState(username) {
 
   useEffect(() => {
     idleTimerRef.current = setInterval(() => {
-      if (emotion === 'idle' || emotion === 'greeting') {
-        const useRare = Math.random() < 0.25;
+      const inactiveSecs = (Date.now() - lastActivityRef.current) / 1000;
+
+      if (inactiveSecs > 45 && (emotion === 'idle' || emotion === 'greeting') && !showQuote) {
+        const useRare = Math.random() < 0.3;
         const raw = useRare ? pick(TARS_RARE_QUOTES) : pick(TARS_QUOTES);
-        showMessage('idle', inject(raw, username), 4500);
+        showMessage('idle', inject(raw, username), 5000);
       }
-    }, 30000);
+    }, 20000);
 
     return () => {
       if (idleTimerRef.current) clearInterval(idleTimerRef.current);
     };
-  }, [emotion, showMessage, username]);
+  }, [emotion, showQuote, showMessage, username]);
 
   useEffect(() => {
     const handler = (e) => {

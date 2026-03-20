@@ -15,7 +15,14 @@ const getSharedCtx = () => {
 export function useSound() {
   // Keep a stable first hook across hot updates to avoid hook-order mismatch in consumers.
   const stableRef = useRef(null);
-  const getCtx = () => getSharedCtx();
+  const getCtx = () => {
+    const ctx = getSharedCtx();
+    if (!ctx) return null;
+    if (ctx.state === 'suspended') {
+      void ctx.resume();
+    }
+    return ctx;
+  };
 
   const unlockAudio = () => {
     try {

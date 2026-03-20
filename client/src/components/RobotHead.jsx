@@ -425,10 +425,11 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
   const [hovered, setHovered] = useState(false);
   const [showPersona, setShowPersona] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const lastSpokenRef = useRef('');
   const { persona, setPersona, config } = usePersona();
   const { user } = useAuth();
   const { playNewChat, playSend } = useSound();
-  const { speak, stop } = useTARSVoice();
+  const { speak, stop, ready } = useTARSVoice();
 
   const {
     emotion,
@@ -472,14 +473,17 @@ export default function RobotHead({ isThinking, isTransmitting, embedded }) {
   ]);
 
   useEffect(() => {
-    if (showQuote && quote && voiceEnabled) {
-      speak(quote);
-    }
+    if (!showQuote || !quote || !voiceEnabled || !ready) return;
+    if (quote === lastSpokenRef.current) return;
+    lastSpokenRef.current = quote;
+    speak(quote, voiceEnabled);
+  }, [showQuote, quote, voiceEnabled, ready, speak]);
 
+  useEffect(() => {
     if (!showQuote) {
       stop();
     }
-  }, [showQuote, quote, voiceEnabled, speak, stop]);
+  }, [showQuote, stop]);
 
   const handlePersonaChange = (key) => {
     setPersona(key);
