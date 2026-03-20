@@ -1,144 +1,103 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 
 export function useTARSVoice() {
-  const [voices, setVoices] = useState([]);
   const [ready, setReady] = useState(false);
-  const isSpeaking = useRef(false);
-  const keepAliveRef = useRef(null);
+  const voiceRef = useRef(null);
+  const timerRef = useRef(null);
 
-  // Load voices async
+  // Load voices
   useEffect(() => {
     const load = () => {
       const v = window.speechSynthesis?.getVoices() || [];
-      if (v.length > 0) {
-        setVoices(v);
-        setReady(true);
+      if (v.length === 0) return;
+
+      // Pick best voice
+      const preferred = [
+        'Google UK English Male',
+        'Microsoft David',
+        'Microsoft Mark',
+        'Daniel',
+        'Alex',
+      ];
+
+      let picked = null;
+      for (const name of preferred) {
+        picked = v.find((x) => x.name.includes(name));
+        if (picked) break;
       }
+      if (!picked) {
+        picked = v.find((x) => x.lang.startsWith('en')) || v[0];
+      }
+
+      voiceRef.current = picked;
+      setReady(true);
     };
+
     load();
     window.speechSynthesis?.addEventListener('voiceschanged', load);
-    setTimeout(load, 500);
-    setTimeout(load, 1500);
+    setTimeout(load, 300);
+    setTimeout(load, 1000);
+
     return () => window.speechSynthesis?.removeEventListener('voiceschanged', load);
-  }, []);
-
-  // -- Chrome 15s bug fix --
-  // Chrome silently kills speech after 15s
-  // We pause + resume every 10s to reset its internal timer
-  const stopKeepAlive = useCallback(() => {
-    if (keepAliveRef.current) {
-      clearInterval(keepAliveRef.current);
-      keepAliveRef.current = null;
-    }
-  }, []);
-
-  const startKeepAlive = useCallback(() => {
-    stopKeepAlive();
-    keepAliveRef.current = setInterval(() => {
-      if (window.speechSynthesis?.speaking) {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      } else {
-        stopKeepAlive();
-      }
-    }, 10000);
-  }, [stopKeepAlive]);
-
-  const pickVoice = useCallback((voiceList) => {
-    const preferred = [
-      'Google UK English Male',
-      'Microsoft David Desktop',
-      'Microsoft David',
-      'Microsoft Mark',
-      'Daniel',
-      'Alex',
-      'Google US English',
-    ];
-    for (const name of preferred) {
-      const match = voiceList.find((v) => v.name.includes(name));
-      if (match) return match;
-    }
-    return (
-      voiceList.find((v) => v.lang.startsWith('en') && v.name.toLowerCase().includes('male')) ||
-      voiceList.find((v) => v.lang.startsWith('en')) ||
-      voiceList[0]
-    );
   }, []);
 
   const speak = useCallback(
     (text, enabled = true) => {
       if (!enabled || !window.speechSynthesis) return;
 
-      // Wait for voices if not ready yet
-      if (!ready) {
-        setTimeout(() => speak(text, enabled), 800);
-        return;
-      }
-
-      // Cancel anything playing
-      window.speechSynthesis.cancel();
-      stopKeepAlive();
-      isSpeaking.current = false;
+      // Clear any pending speak timers
+      clearTimeout(timerRef.current);
 
       // Clean text
-      const clean = String(text || '')
+      let clean = String(text || '')
         .replace(/\{name\}/g, '')
-        .replace(/[·•◦▓]/g, '')
-        .replace(/\[.*?\]/g, '')
+        .replace(/[·•◦▓\[\]]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
 
+      // HARD LIMIT - never more than 100 chars
+      // Split at last space before limit
+      if (clean.length > 100) {
+        const splitPoint = clean.lastIndexOf(' ', 100);
+        clean = splitPoint > 0 ? clean.substring(0, splitPoint) : clean.substring(0, 100);
+      }
+
       if (!clean) return;
 
-      const voiceList = window.speechSynthesis.getVoices();
-      const voice = pickVoice(voiceList);
+      // Cancel current speech
+      window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(clean);
-      if (voice) utterance.voice = voice;
-      utterance.rate = 0.82;
-      utterance.pitch = 0.6;
-      utterance.volume = 0.85;
+      // Delay to let cancel() settle - this is critical
+      timerRef.current = setTimeout(() => {
+        if (!window.speechSynthesis) return;
 
-      utterance.onstart = () => {
-        isSpeaking.current = true;
-        startKeepAlive();
-      };
+        const u = new SpeechSynthesisUtterance(clean);
+        u.voice = voiceRef.current;
+        u.rate = 0.85;
+        u.pitch = 0.6;
+        u.volume = 0.85;
 
-      utterance.onend = () => {
-        isSpeaking.current = false;
-        stopKeepAlive();
-      };
+        u.onerror = (e) => {
+          if (e.error !== 'interrupted') console.warn('TTS:', e.error);
+        };
 
-      utterance.onerror = (e) => {
-        // Ignore 'interrupted' errors - those are from cancel()
-        if (e.error !== 'interrupted') {
-          console.warn('TTS error:', e.error);
-        }
-        isSpeaking.current = false;
-        stopKeepAlive();
-      };
-
-      // Small delay before speaking - prevents cut-off on rapid triggers
-      setTimeout(() => {
-        window.speechSynthesis.speak(utterance);
-      }, 120);
+        window.speechSynthesis.speak(u);
+      }, 200);
     },
-    [ready, voices, startKeepAlive, stopKeepAlive, pickVoice]
+    [ready]
   );
 
   const stop = useCallback(() => {
+    clearTimeout(timerRef.current);
     window.speechSynthesis?.cancel();
-    stopKeepAlive();
-    isSpeaking.current = false;
-  }, [stopKeepAlive]);
+  }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
+      clearTimeout(timerRef.current);
       window.speechSynthesis?.cancel();
-      stopKeepAlive();
     };
-  }, [stopKeepAlive]);
+  }, []);
 
   return { speak, stop, ready };
 }
