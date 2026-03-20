@@ -87,14 +87,17 @@ export function useSound() {
     const ctx = getCtx();
     if (!ctx) return;
 
-    playTone(ctx, 55, 0.0, 0.8, 0.03, 'sawtooth');
-    playTone(ctx, 80, 0.4, 0.8, 0.03, 'sawtooth');
-    playTone(ctx, 110, 0.8, 0.6, 0.03, 'sawtooth');
-    playTone(ctx, 160, 1.2, 0.5, 0.03, 'sawtooth');
-    playTone(ctx, 220, 1.6, 0.4, 0.025, 'sawtooth');
-    playTone(ctx, 320, 1.9, 0.3, 0.02, 'sine');
-    playTone(ctx, 440, 2.1, 0.25, 0.025, 'sine');
-    playTone(ctx, 660, 2.3, 0.2, 0.02, 'sine');
+    // Brighter startup stack so it is audible on laptop and phone speakers.
+    playTone(ctx, 180, 0.00, 0.32, 0.07, 'triangle');
+    playTone(ctx, 260, 0.14, 0.34, 0.075, 'triangle');
+    playTone(ctx, 360, 0.28, 0.36, 0.08, 'triangle');
+    playTone(ctx, 520, 0.44, 0.34, 0.075, 'sine');
+    playTone(ctx, 740, 0.62, 0.32, 0.07, 'sine');
+    playTone(ctx, 980, 0.82, 0.26, 0.065, 'sine');
+
+    // Final confirmation chirp.
+    playTone(ctx, 1240, 1.04, 0.12, 0.09, 'square');
+    playTone(ctx, 1560, 1.16, 0.12, 0.085, 'square');
   };
 
   return { playSend, playReceive, playNewChat, playError, playBoot, unlockAudio };

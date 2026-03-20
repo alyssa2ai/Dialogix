@@ -28,8 +28,8 @@ export default function MessageBubble({ message, username, isLatest }) {
         gap: '10px',
         padding: '0',
         flexDirection: isUser ? 'row-reverse' : 'row',
-        paddingLeft: isUser ? '20px' : '0px',
-        paddingRight: isUser ? '0px' : '20px',
+        paddingLeft: isUser ? 'clamp(18px, 9vw, 110px)' : '0px',
+        paddingRight: isUser ? '0px' : 'clamp(18px, 9vw, 110px)',
       }}
     >
       {/* Avatar */}
@@ -49,7 +49,7 @@ export default function MessageBubble({ message, username, isLatest }) {
       </div>
 
       {/* Bubble */}
-      <div style={{ maxWidth: isUser ? '52%' : '56%', minWidth: '60px' }}>
+      <div style={{ maxWidth: isUser ? '50%' : '54%', minWidth: '60px' }}>
         <div
           className={isUser ? 'bubble-user' : 'bubble-bot'}
           style={{
