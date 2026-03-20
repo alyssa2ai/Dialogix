@@ -83,21 +83,66 @@ export function useSound() {
     playTone(ctx, 180, 0.1, 0.15, 0.04, 'square');
   };
 
+  const playBootSequence = (ctx) => {
+    // Boost just the boot sequence so startup chime is clearly audible.
+    const master = ctx.createGain();
+    master.gain.value = 1.35;
+    master.connect(ctx.destination);
+
+    const playBootTone = (freq, startTime, duration, volume, type) => {
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(master);
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+        gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration + 0.08);
+      } catch (_) {
+        // Ignore isolated oscillator failures.
+      }
+    };
+
+    // Brighter startup stack so it is audible on laptop and phone speakers.
+    playBootTone(220, 0.00, 0.24, 0.08, 'triangle');
+    playBootTone(320, 0.10, 0.26, 0.09, 'triangle');
+    playBootTone(440, 0.22, 0.28, 0.10, 'triangle');
+    playBootTone(620, 0.38, 0.26, 0.09, 'sine');
+    playBootTone(880, 0.56, 0.24, 0.085, 'sine');
+    playBootTone(1160, 0.72, 0.20, 0.08, 'sine');
+
+    // Final confirmation chirp.
+    playBootTone(1460, 0.90, 0.11, 0.11, 'square');
+    playBootTone(1840, 1.02, 0.11, 0.10, 'square');
+
+    setTimeout(() => {
+      try {
+        master.disconnect();
+      } catch (_) {
+        // Ignore disconnect race conditions.
+      }
+    }, 1600);
+  };
+
   const playBoot = () => {
     const ctx = getCtx();
     if (!ctx) return;
 
-    // Brighter startup stack so it is audible on laptop and phone speakers.
-    playTone(ctx, 180, 0.00, 0.32, 0.07, 'triangle');
-    playTone(ctx, 260, 0.14, 0.34, 0.075, 'triangle');
-    playTone(ctx, 360, 0.28, 0.36, 0.08, 'triangle');
-    playTone(ctx, 520, 0.44, 0.34, 0.075, 'sine');
-    playTone(ctx, 740, 0.62, 0.32, 0.07, 'sine');
-    playTone(ctx, 980, 0.82, 0.26, 0.065, 'sine');
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => playBootSequence(ctx)).catch(() => {
+        // If resume fails, still attempt playback.
+        playBootSequence(ctx);
+      });
+      return;
+    }
 
-    // Final confirmation chirp.
-    playTone(ctx, 1240, 1.04, 0.12, 0.09, 'square');
-    playTone(ctx, 1560, 1.16, 0.12, 0.085, 'square');
+    playBootSequence(ctx);
   };
 
   return { playSend, playReceive, playNewChat, playError, playBoot, unlockAudio };
